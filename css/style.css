@@ -223,9 +223,40 @@ details summary { cursor: pointer; font-size: 0.82rem; color: var(--text-seconda
 
 /* ---------- Insights ---------- */
 #insightsBody p { line-height: 1.55; margin: 0 0 10px; }
-#insightsBody .insight-flag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; margin-right: 6px; }
+.insight-flag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; margin-right: 6px; }
 .insight-flag.good { background: color-mix(in srgb, var(--status-good) 18%, transparent); color: var(--status-good); }
 .insight-flag.warn { background: color-mix(in srgb, var(--status-warning) 25%, transparent); color: #8a5a00; }
+.insight-flag.tip { background: color-mix(in srgb, var(--series-1) 18%, transparent); color: var(--series-1); }
+
+/* ---------- Analysis & tips ---------- */
+.findings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.finding-card {
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px;
+  background: var(--page-plane); border-left: 3px solid var(--baseline);
+}
+.finding-card.finding-good { border-left-color: var(--status-good); }
+.finding-card.finding-tip { border-left-color: var(--series-1); }
+.finding-card.finding-warn { border-left-color: var(--status-critical); }
+.finding-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.finding-card h4 { margin: 0 0 6px; font-size: 0.95rem; }
+.finding-card p { margin: 0 0 8px; font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary); }
+.finding-action { color: var(--text-primary) !important; }
+.finding-metric { font-size: 0.78rem !important; color: var(--text-muted) !important; font-variant-numeric: tabular-nums; margin: 0 !important; }
+.pin-btn {
+  font: inherit; font-size: 0.72rem; border: 1px solid var(--border); background: var(--surface-1);
+  color: var(--text-secondary); border-radius: 999px; padding: 4px 10px; cursor: pointer; white-space: nowrap;
+}
+.pin-btn:hover { border-color: var(--series-1); color: var(--series-1); }
+
+#focusTipsBlock h3 { font-size: 0.9rem; margin: 0 0 8px; }
+.focus-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.focus-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: 8px; background: color-mix(in srgb, var(--series-1) 10%, var(--page-plane));
+  border: 1px solid color-mix(in srgb, var(--series-1) 35%, transparent);
+}
+.focus-item-title { font-weight: 600; font-size: 0.85rem; }
+.focus-item-detail { font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; }
 
 /* ---------- Footer ---------- */
 .app-footer { text-align: center; color: var(--text-muted); font-size: 0.78rem; margin-top: 24px; }

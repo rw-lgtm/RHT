@@ -64,7 +64,7 @@ const KCAL_PER_KG_FAT = 7700;
    Storage
    ========================================================================= */
 
-const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1' };
+const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1' };
 
 function defaultProfile() {
   return {
@@ -90,6 +90,11 @@ function loadDays() {
   } catch (e) { return {}; }
 }
 function saveDays(days) { localStorage.setItem(STORAGE_KEYS.days, JSON.stringify(days)); }
+
+function loadFocusTips() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.focus)) || []; } catch (e) { return []; }
+}
+function saveFocusTips(list) { localStorage.setItem(STORAGE_KEYS.focus, JSON.stringify(list)); }
 
 /* =========================================================================
    State
@@ -568,62 +573,233 @@ function renderCharts() {
 }
 
 /* =========================================================================
-   Insights
+   Range statistics (shared by insights + analysis/tips)
    ========================================================================= */
 
-function computeInsights() {
-  const labels = buildRangeLabels(selectedRange, selectedDate);
-  const loggedDays = labels.filter((k) => days[k] && days[k].food.length);
-  const body = $('#insightsBody');
+function computeRangeStats(labels) {
+  const loggedKeys = labels.filter((k) => days[k] && days[k].food.length);
+  if (!loggedKeys.length) return { loggedDays: 0, totalDays: labels.length, coveragePct: 0 };
 
-  if (loggedDays.length < 2) {
-    body.innerHTML = `<p>Sobald du an mehreren Tagen Mahlzeiten erfasst hast, zeige ich dir hier, wie sich deine Kalorienbilanz über die Zeit entwickelt &mdash; und ob sie zu deinem tatsächlichen Gewichtsverlauf passt.</p>`;
-    return;
-  }
+  let totalBalance = 0, totalActivityKcal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, totalFiber = 0;
+  let proteinHits = 0, fiberHits = 0, belowBMR = 0;
+  let weekdayBalanceSum = 0, weekdayCount = 0, weekendBalanceSum = 0, weekendCount = 0;
+  const balances = [];
 
-  let totalBalance = 0, totalActivityKcal = 0;
-  loggedDays.forEach((k) => {
+  loggedKeys.forEach((k) => {
     const dayObj = days[k];
     const w = getLatestWeightUpTo(k);
     const totals = calcDayTotals(dayObj);
     const targets = calcTargets(profile, w, totals.activityKcal);
-    totalBalance += totals.food.kcal - (targets.baseline + totals.activityKcal);
+    const totalBurn = targets.baseline + totals.activityKcal;
+    const balance = totals.food.kcal - totalBurn;
+    balances.push(balance);
+    totalBalance += balance;
     totalActivityKcal += totals.activityKcal;
+    totalProtein += totals.food.protein;
+    totalCarbs += totals.food.carbs;
+    totalFat += totals.food.fat;
+    totalFiber += totals.food.fiber;
+    if (totals.food.protein >= targets.proteinTarget * 0.9) proteinHits++;
+    if (totals.food.fiber >= targets.fiberTarget * 0.9) fiberHits++;
+    if (totals.food.kcal < targets.bmr) belowBMR++;
+    const dow = keyToDate(k).getDay();
+    if (dow === 0 || dow === 6) { weekendBalanceSum += balance; weekendCount++; }
+    else { weekdayBalanceSum += balance; weekdayCount++; }
   });
-  const avgBalance = totalBalance / loggedDays.length;
-  const avgActivityKcal = totalActivityKcal / loggedDays.length;
-  const predictedKg = totalBalance / KCAL_PER_KG_FAT;
 
-  const weightEntries = labels.filter((k) => days[k] && days[k].weightKg != null);
-  let actualLine = '';
-  let mismatchFlag = null;
-  if (weightEntries.length >= 2) {
-    const first = days[weightEntries[0]].weightKg;
-    const last = days[weightEntries[weightEntries.length - 1]].weightKg;
-    const actualKg = last - first;
-    actualLine = `<p>Dein tatsächliches Gewicht hat sich im selben Zeitraum um <strong>${actualKg <= 0 ? '' : '+'}${fmt(actualKg, 1)} kg</strong> verändert (${fmt(first, 1)} → ${fmt(last, 1)} kg).</p>`;
-    const diff = Math.abs(actualKg - predictedKg);
-    if (diff > 0.6) {
-      mismatchFlag = `<p><span class="insight-flag warn">Auffällig</span>Die berechnete Bilanz und dein gemessenes Gewicht weichen spürbar voneinander ab (${fmt(diff, 1)} kg Unterschied). Mögliche Gründe: ungenau geschätzte Portionsgrößen, vergessene kleine Snacks/Getränke, Wasser- und Salzhaushalt (besonders bei Zyklus, Stress oder viel Salz/Kohlenhydraten), oder eine falsch eingeschätzte Alltagsaktivität. Das ist normal &mdash; je konsequenter du trackst, desto klarer wird das Bild.</p>`;
-    } else {
-      mismatchFlag = `<p><span class="insight-flag good">Stimmig</span>Deine berechnete Bilanz und dein gemessenes Gewicht passen gut zusammen &mdash; das Tracking scheint deine Realität aktuell gut abzubilden.</p>`;
-    }
+  const n = loggedKeys.length;
+  const avgBalance = totalBalance / n;
+  const variance = balances.reduce((s, b) => s + Math.pow(b - avgBalance, 2), 0) / n;
+
+  const weightKeys = labels.filter((k) => days[k] && days[k].weightKg != null);
+  let weightDelta = null, firstWeight = null, lastWeight = null;
+  if (weightKeys.length >= 2) {
+    firstWeight = days[weightKeys[0]].weightKg;
+    lastWeight = days[weightKeys[weightKeys.length - 1]].weightKg;
+    weightDelta = lastWeight - firstWeight;
+  }
+
+  return {
+    loggedDays: n, totalDays: labels.length, coveragePct: Math.round((n / labels.length) * 100),
+    avgBalance, stdDev: Math.sqrt(variance), predictedKg: totalBalance / KCAL_PER_KG_FAT,
+    avgProtein: totalProtein / n, avgCarbs: totalCarbs / n, avgFat: totalFat / n, avgFiber: totalFiber / n,
+    avgActivityKcal: totalActivityKcal / n,
+    proteinHitRate: proteinHits / n, fiberHitRate: fiberHits / n, belowBMRShare: belowBMR / n,
+    weekdayAvgBalance: weekdayCount ? weekdayBalanceSum / weekdayCount : null,
+    weekendAvgBalance: weekendCount ? weekendBalanceSum / weekendCount : null,
+    weightDelta, firstWeight, lastWeight, weightEntries: weightKeys.length,
+  };
+}
+
+/* =========================================================================
+   Insights (narrative summary)
+   ========================================================================= */
+
+function computeInsights() {
+  const labels = buildRangeLabels(selectedRange, selectedDate);
+  const stats = computeRangeStats(labels);
+  const body = $('#insightsBody');
+
+  if (stats.loggedDays < 2) {
+    body.innerHTML = `<p>Sobald du an mehreren Tagen Mahlzeiten erfasst hast, zeige ich dir hier, wie sich deine Kalorienbilanz über die Zeit entwickelt &mdash; und ob sie zu deinem tatsächlichen Gewichtsverlauf passt.</p>`;
+    return;
+  }
+
+  let actualLine, mismatchFlag = '';
+  if (stats.weightEntries >= 2) {
+    const actualKg = stats.weightDelta;
+    actualLine = `<p>Dein tatsächliches Gewicht hat sich im selben Zeitraum um <strong>${actualKg <= 0 ? '' : '+'}${fmt(actualKg, 1)} kg</strong> verändert (${fmt(stats.firstWeight, 1)} → ${fmt(stats.lastWeight, 1)} kg).</p>`;
+    const diff = Math.abs(actualKg - stats.predictedKg);
+    mismatchFlag = diff > 0.6
+      ? `<p><span class="insight-flag warn">Auffällig</span>Die berechnete Bilanz und dein gemessenes Gewicht weichen spürbar voneinander ab (${fmt(diff, 1)} kg Unterschied). Mögliche Gründe: ungenau geschätzte Portionsgrößen, vergessene kleine Snacks/Getränke, Wasser- und Salzhaushalt (besonders bei Zyklus, Stress oder viel Salz/Kohlenhydraten), oder eine falsch eingeschätzte Alltagsaktivität. Das ist normal &mdash; je konsequenter du trackst, desto klarer wird das Bild.</p>`
+      : `<p><span class="insight-flag good">Stimmig</span>Deine berechnete Bilanz und dein gemessenes Gewicht passen gut zusammen &mdash; das Tracking scheint deine Realität aktuell gut abzubilden.</p>`;
   } else {
     actualLine = `<p>Trage an mehreren Tagen dein Gewicht ein, um zu sehen, ob deine Kalorienbilanz mit deiner tatsächlichen Gewichtsentwicklung übereinstimmt.</p>`;
   }
 
-  const coveragePct = Math.round((loggedDays.length / labels.length) * 100);
-  const balanceState = avgBalance <= 0
-    ? `im Schnitt ein Defizit von <strong>${fmt(Math.abs(avgBalance))} kcal/Tag</strong>`
-    : `im Schnitt einen Überschuss von <strong>${fmt(avgBalance)} kcal/Tag</strong>`;
+  const balanceState = stats.avgBalance <= 0
+    ? `im Schnitt ein Defizit von <strong>${fmt(Math.abs(stats.avgBalance))} kcal/Tag</strong>`
+    : `im Schnitt einen Überschuss von <strong>${fmt(stats.avgBalance)} kcal/Tag</strong>`;
 
   body.innerHTML = `
-    <p>An ${loggedDays.length} von ${labels.length} Tagen (${coveragePct}%) hast du Mahlzeiten erfasst. In dieser Zeit hattest du ${balanceState}, rechnerisch entspricht das ${predictedKg <= 0 ? 'einem Verlust' : 'einer Zunahme'} von etwa <strong>${fmt(Math.abs(predictedKg), 1)} kg</strong> Körperfett.</p>
-    <p>Durchschnittlich verbrauchst du zusätzlich zu deinem Grundumsatz etwa <strong>${fmt(avgActivityKcal)} kcal/Tag</strong> durch erfasste Bewegung (Sport, Spaziergänge, Alltagsbewegung).</p>
+    <p>An ${stats.loggedDays} von ${stats.totalDays} Tagen (${stats.coveragePct}%) hast du Mahlzeiten erfasst. In dieser Zeit hattest du ${balanceState}, rechnerisch entspricht das ${stats.predictedKg <= 0 ? 'einem Verlust' : 'einer Zunahme'} von etwa <strong>${fmt(Math.abs(stats.predictedKg), 1)} kg</strong> Körperfett.</p>
+    <p>Durchschnittlich verbrauchst du zusätzlich zu deinem Grundumsatz etwa <strong>${fmt(stats.avgActivityKcal)} kcal/Tag</strong> durch erfasste Bewegung (Sport, Spaziergänge, Alltagsbewegung).</p>
     ${actualLine}
-    ${mismatchFlag || ''}
-    ${coveragePct < 60 ? `<p><span class="insight-flag warn">Hinweis</span>Weniger als 60% der Tage sind erfasst &mdash; je lückenhafter das Tracking, desto unsicherer diese Einschätzung.</p>` : ''}
+    ${mismatchFlag}
+    ${stats.coveragePct < 60 ? `<p><span class="insight-flag warn">Hinweis</span>Weniger als 60% der Tage sind erfasst &mdash; je lückenhafter das Tracking, desto unsicherer diese Einschätzung.</p>` : ''}
   `;
+}
+
+/* =========================================================================
+   Analysis & tips (rule-based findings + "focus tip" progress tracking)
+   ========================================================================= */
+
+const METRIC_GETTERS = {
+  'deficit-consistency': { label: 'Schwankung Tagesbilanz', unit: ' kcal', decimals: 0, get: (s) => s.stdDev },
+  'protein-low': { label: 'Ø Eiweiß', unit: ' g/Tag', decimals: 0, get: (s) => s.avgProtein },
+  'fiber-low': { label: 'Ø Ballaststoffe', unit: ' g/Tag', decimals: 0, get: (s) => s.avgFiber },
+  'aggressive-deficit': { label: 'Tage unter Grundumsatz', unit: '%', decimals: 0, get: (s) => s.belowBMRShare * 100 },
+  'low-neat': { label: 'Ø zusätzliche Bewegung', unit: ' kcal/Tag', decimals: 0, get: (s) => s.avgActivityKcal },
+  'weekend-pattern': { label: 'Wochenende − Woche', unit: ' kcal', decimals: 0, get: (s) => (s.weekendAvgBalance != null && s.weekdayAvgBalance != null) ? (s.weekendAvgBalance - s.weekdayAvgBalance) : null },
+  'tracking-coverage': { label: 'Erfasste Tage', unit: '%', decimals: 0, get: (s) => s.coveragePct },
+  'good-consistency': { label: 'Erfasste Tage', unit: '%', decimals: 0, get: (s) => s.coveragePct },
+  'plateau': { label: 'Gewichtsänderung', unit: ' kg', decimals: 1, get: (s) => s.weightDelta },
+};
+
+function generateFindings(cur, rangeDays) {
+  const findings = [];
+
+  if (cur.stdDev > 500) {
+    findings.push({ id: 'deficit-consistency', status: 'tip', title: 'Deine Kalorienbilanz schwankt stark', desc: 'Von Tag zu Tag unterscheidet sich deine Bilanz im Schnitt um mehr als 500 kcal.', action: 'Versuche, an möglichst vielen Tagen ähnlich viel zu essen. Große Schwankungen machen es schwerer, echte Fortschritte von normalen Gewichtsschwankungen (Wasser, Verdauung) zu unterscheiden.' });
+  } else {
+    findings.push({ id: 'deficit-consistency', status: 'good', title: 'Deine Kalorienbilanz ist recht konstant', desc: 'Deine tägliche Bilanz schwankt nur wenig.', action: 'Das erleichtert es, echte Trends zu erkennen – weiter so.' });
+  }
+
+  if (cur.proteinHitRate < 0.6) {
+    findings.push({ id: 'protein-low', status: 'tip', title: 'Eiweiß-Ziel selten erreicht', desc: `Nur an ${Math.round(cur.proteinHitRate * 100)}% der erfassten Tage hast du dein Eiweiß-Ziel erreicht.`, action: 'Mehr Eiweiß (Quark, Joghurt, Hähnchen, Fisch, Linsen, Tofu) hält länger satt, schützt deine Muskelmasse im Defizit und hat beim Verdauen selbst einen höheren Energieverbrauch als Fett oder Kohlenhydrate.' });
+  } else {
+    findings.push({ id: 'protein-low', status: 'good', title: 'Eiweiß-Versorgung solide', desc: 'Du erreichst dein Eiweiß-Ziel an den meisten Tagen.', action: 'Das unterstützt Sättigung und den Erhalt von Muskelmasse im Defizit.' });
+  }
+
+  if (cur.fiberHitRate < 0.5) {
+    findings.push({ id: 'fiber-low', status: 'tip', title: 'Ballaststoffe oft unter dem Ziel', desc: `An ${Math.round(cur.fiberHitRate * 100)}% der Tage erreichst du dein Ballaststoff-Ziel.`, action: 'Vollkornprodukte, Hülsenfrüchte, Gemüse und Obst erhöhen die Sättigung pro Kalorie und unterstützen die Verdauung – oft ein unterschätzter Hebel gegen Heißhunger.' });
+  }
+
+  if (cur.belowBMRShare > 0.3) {
+    findings.push({ id: 'aggressive-deficit', status: 'warn', title: 'Häufig unter dem Grundumsatz gegessen', desc: `An ${Math.round(cur.belowBMRShare * 100)}% der Tage lag deine Kalorienzufuhr unter deinem geschätzten Grundumsatz.`, action: 'Dauerhaft unter dem Grundumsatz zu essen ist selten nötig, schwer durchzuhalten und kann Energie, Konzentration und Stimmung verschlechtern. Ein moderates, aber stabiles Defizit lässt sich meist besser durchhalten und ist nachhaltiger für den Stoffwechsel.' });
+  }
+
+  if (cur.avgActivityKcal < 150) {
+    findings.push({ id: 'low-neat', status: 'tip', title: 'Wenig erfasste Alltagsbewegung', desc: `Im Schnitt ${fmt(cur.avgActivityKcal)} kcal/Tag zusätzliche Bewegung.`, action: 'Kleine, leicht wiederholbare Portionen Bewegung – Treppen statt Aufzug, ein täglicher Spaziergang, den Hund eine Runde mehr ausführen – erhöhen deinen Gesamtverbrauch oft nachhaltiger als ein einzelnes intensives Workout pro Woche.' });
+  } else if (cur.avgActivityKcal >= 400) {
+    findings.push({ id: 'low-neat', status: 'good', title: 'Viel Alltagsbewegung erfasst', desc: `Im Schnitt ${fmt(cur.avgActivityKcal)} kcal/Tag zusätzliche Bewegung.`, action: 'Das trägt spürbar zu deinem Gesamtverbrauch bei – eine der zuverlässigsten Stellschrauben für ein Defizit.' });
+  }
+
+  if (cur.weekdayAvgBalance != null && cur.weekendAvgBalance != null) {
+    const diff = cur.weekendAvgBalance - cur.weekdayAvgBalance;
+    if (diff > 400) {
+      findings.push({ id: 'weekend-pattern', status: 'tip', title: 'Am Wochenende deutlich mehr als unter der Woche', desc: `Deine Bilanz ist am Wochenende im Schnitt ${fmt(diff)} kcal höher als unter der Woche.`, action: 'Ein sehr häufiges Muster. Schon kleine, bewusste Anpassungen an ein bis zwei Wochenend-Mahlzeiten können die Wochenbilanz spürbar verändern, ohne dass du dir das ganze Wochenende einschränken musst.' });
+    }
+  }
+
+  if (cur.coveragePct < 60) {
+    findings.push({ id: 'tracking-coverage', status: 'tip', title: 'Lückenhaftes Tracking', desc: `Nur an ${cur.coveragePct}% der Tage in diesem Zeitraum hast du Mahlzeiten erfasst.`, action: 'Je lückenloser du trackst – auch grob geschätzt –, desto verlässlicher werden alle Auswertungen hier. Lieber ein ungefährer Eintrag als gar keiner.' });
+  } else if (cur.coveragePct >= 85) {
+    findings.push({ id: 'good-consistency', status: 'good', title: 'Sehr konsistentes Tracking', desc: `${cur.coveragePct}% der Tage erfasst.`, action: 'Das ist die wichtigste Grundlage für verlässliche Erkenntnisse aus deinen Daten.' });
+  }
+
+  if (rangeDays >= 14 && cur.weightEntries >= 2) {
+    const predictedAbs = Math.abs(cur.predictedKg);
+    const actualAbs = Math.abs(cur.weightDelta || 0);
+    if (cur.avgBalance < -150 && actualAbs < 0.3 && predictedAbs > 0.5) {
+      findings.push({
+        id: 'plateau', status: 'warn', title: 'Gewicht bewegt sich kaum trotz rechnerischem Defizit',
+        desc: `Rechnerisch stünde ein Verlust von ca. ${fmt(predictedAbs, 1)} kg an, gemessen hat sich dein Gewicht aber kaum verändert.`,
+        action: 'Mögliche Gründe: Portionsgrößen und „unsichtbare" Kalorien (Öl, Saucen, Snacks) werden leicht unterschätzt; Wasser-/Salzhaushalt (Zyklus, Stress, Salz, neues Training) kann mehrere Tage überlagern; dein Grundumsatz sinkt mit sinkendem Gewicht mit, daher lohnt es sich, dein Gewicht im Profil aktuell zu halten. Falls sich über mehrere Wochen nichts tut, kann eine bewusste 1–2-wöchige Pause auf Erhaltungskalorien helfen, bevor es weitergeht.',
+      });
+    }
+  }
+
+  return findings;
+}
+
+function renderFindings() {
+  const labels = buildRangeLabels(selectedRange, selectedDate);
+  const cur = computeRangeStats(labels);
+  const grid = $('#findingsGrid');
+
+  if (cur.loggedDays < 3) {
+    grid.innerHTML = `<p class="hint">Sobald du an mindestens 3 Tagen in diesem Zeitraum Mahlzeiten erfasst hast, gebe ich dir hier konkrete Tipps zur Verbesserung.</p>`;
+    $('#focusTipsBlock').innerHTML = '';
+    return;
+  }
+
+  const findings = generateFindings(cur, selectedRange);
+  const pins = loadFocusTips();
+
+  grid.innerHTML = findings.map((f) => {
+    const m = METRIC_GETTERS[f.id];
+    const curVal = m ? m.get(cur) : null;
+    const metricLine = (m && curVal != null)
+      ? `<p class="finding-metric">${m.label}: ${fmt(curVal, m.decimals)}${m.unit}</p>` : '';
+    const pinned = pins.some((p) => p.id === f.id);
+    const statusLabel = f.status === 'good' ? 'Läuft gut' : (f.status === 'warn' ? 'Achtung' : 'Tipp');
+    return `
+      <div class="finding-card finding-${f.status}">
+        <div class="finding-head">
+          <span class="insight-flag ${f.status}">${statusLabel}</span>
+          <button type="button" class="pin-btn" data-pin-id="${f.id}" data-pin-title="${escapeHtml(f.title)}">${pinned ? '📌 Fokus entfernen' : '📌 Als Fokus merken'}</button>
+        </div>
+        <h4>${f.title}</h4>
+        <p>${f.desc}</p>
+        <p class="finding-action">${f.action}</p>
+        ${metricLine}
+      </div>`;
+  }).join('') || `<p class="hint">Aktuell keine besonderen Auffälligkeiten – weiter so.</p>`;
+
+  renderFocusPanel(cur);
+}
+
+function renderFocusPanel(cur) {
+  const pins = loadFocusTips();
+  const block = $('#focusTipsBlock');
+  if (!pins.length) { block.innerHTML = ''; return; }
+  block.innerHTML = `<h3>Deine Fokus-Tipps</h3><div class="focus-list">${pins.map((p) => {
+    const m = METRIC_GETTERS[p.id];
+    const nowVal = m ? m.get(cur) : null;
+    let deltaText = '';
+    if (m && nowVal != null && p.baselineValue != null) {
+      const delta = nowVal - p.baselineValue;
+      deltaText = ` · ${m.label} damals: ${fmt(p.baselineValue, m.decimals)}${m.unit} → jetzt: ${fmt(nowVal, m.decimals)}${m.unit} (${delta >= 0 ? '+' : ''}${fmt(delta, m.decimals)}${m.unit})`;
+    }
+    return `<div class="focus-item">
+      <div class="focus-item-main">
+        <div class="focus-item-title">${escapeHtml(p.title)}</div>
+        <div class="focus-item-detail">Gemerkt am ${longLabel(p.pinnedAt)}${deltaText}</div>
+      </div>
+      <button class="log-item-remove" data-unpin-id="${p.id}" aria-label="Fokus entfernen" title="Fokus entfernen">✕</button>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 /* =========================================================================
@@ -640,6 +816,7 @@ function renderAll() {
   $('#weightInput').value = dayObj.weightKg != null ? dayObj.weightKg : '';
   renderCharts();
   computeInsights();
+  renderFindings();
 }
 
 /* =========================================================================
@@ -667,6 +844,8 @@ function wireEvents() {
     selectedRange = Number(btn.dataset.range);
     $$('#rangeToggle button').forEach((b) => b.classList.toggle('active', b === btn));
     renderCharts();
+    computeInsights();
+    renderFindings();
   });
 
   $('#foodForm').addEventListener('submit', (e) => {
@@ -744,6 +923,31 @@ function wireEvents() {
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem(STORAGE_KEYS.theme, next);
     renderCharts();
+  });
+
+  $('#findingsGrid').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-pin-id]');
+    if (!btn) return;
+    const id = btn.dataset.pinId, title = btn.dataset.pinTitle;
+    let pins = loadFocusTips();
+    if (pins.some((p) => p.id === id)) {
+      pins = pins.filter((p) => p.id !== id);
+    } else {
+      const labels = buildRangeLabels(selectedRange, selectedDate);
+      const cur = computeRangeStats(labels);
+      const m = METRIC_GETTERS[id];
+      const baselineValue = m ? m.get(cur) : null;
+      pins.push({ id, title, pinnedAt: selectedDate, baselineValue });
+    }
+    saveFocusTips(pins);
+    renderFindings();
+  });
+
+  $('#focusTipsBlock').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-unpin-id]');
+    if (!btn) return;
+    saveFocusTips(loadFocusTips().filter((p) => p.id !== btn.dataset.unpinId));
+    renderFindings();
   });
 
   $('#settingsBtn').addEventListener('click', openSettings);
