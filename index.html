@@ -43,7 +43,12 @@
         <form id="foodForm" class="inline-form">
           <input list="foodList" id="foodName" placeholder="Lebensmittel (z. B. Hähnchenbrust)" required autocomplete="off">
           <datalist id="foodList"></datalist>
-          <input type="number" id="foodGrams" placeholder="Gramm" min="1" value="100" required>
+          <input type="number" id="foodAmount" placeholder="Menge" min="0.1" step="0.1" value="100" required>
+          <select id="foodUnit">
+            <option value="g" selected>g</option>
+            <option value="ml">ml</option>
+            <option value="stk">Stück</option>
+          </select>
           <button type="submit" class="btn btn-primary">+ Hinzufügen</button>
         </form>
         <div class="ocr-row">

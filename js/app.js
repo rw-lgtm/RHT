@@ -8,7 +8,7 @@ const FOOD_DB = [
   { name: 'Hähnchenbrust (roh)', kcal: 110, protein: 23, carbs: 0, fat: 2, fiber: 0 },
   { name: 'Rinderhack (gemischt)', kcal: 254, protein: 17, carbs: 0, fat: 20, fiber: 0 },
   { name: 'Lachs (roh)', kcal: 208, protein: 20, carbs: 0, fat: 13, fiber: 0 },
-  { name: 'Ei (ganz)', kcal: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0 },
+  { name: 'Ei (ganz)', kcal: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0, gramsPerPiece: 53 },
   { name: 'Magerquark', kcal: 67, protein: 12, carbs: 4, fat: 0.2, fiber: 0 },
   { name: 'Naturjoghurt 3,5%', kcal: 66, protein: 3.5, carbs: 4.7, fat: 3.5, fiber: 0 },
   { name: 'Griechischer Joghurt 10%', kcal: 133, protein: 5.7, carbs: 4, fat: 10, fiber: 0 },
@@ -21,8 +21,8 @@ const FOOD_DB = [
   { name: 'Haferflocken (roh)', kcal: 372, protein: 13, carbs: 60, fat: 7, fiber: 10 },
   { name: 'Vollkornbrot', kcal: 216, protein: 8, carbs: 40, fat: 3, fiber: 7 },
   { name: 'Weißbrot', kcal: 265, protein: 9, carbs: 49, fat: 3.2, fiber: 2.7 },
-  { name: 'Banane', kcal: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6 },
-  { name: 'Apfel', kcal: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4 },
+  { name: 'Banane', kcal: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, gramsPerPiece: 120 },
+  { name: 'Apfel', kcal: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, gramsPerPiece: 150 },
   { name: 'Beeren (gemischt)', kcal: 50, protein: 0.8, carbs: 11, fat: 0.4, fiber: 3 },
   { name: 'Brokkoli (gekocht)', kcal: 35, protein: 2.4, carbs: 7, fat: 0.4, fiber: 3.3 },
   { name: 'Gemüse gemischt / Salat', kcal: 25, protein: 2, carbs: 4, fat: 0.3, fiber: 2 },
@@ -59,6 +59,7 @@ const ACTIVITY_MET = {
 };
 
 const KCAL_PER_KG_FAT = 7700;
+const UNIT_LABELS = { g: 'g', ml: 'ml', stk: 'Stück' };
 
 /* =========================================================================
    Storage
@@ -333,7 +334,7 @@ function renderFoodList() {
   list.innerHTML = dayObj.food.map((f) => `
     <li>
       <div class="log-item-main">
-        <div class="log-item-name">${escapeHtml(f.name)} ${f.grams ? `(${fmt(f.grams)} g)` : ''}</div>
+        <div class="log-item-name">${escapeHtml(f.name)} ${f.amount != null ? `(${fmt(f.amount, f.unit === 'stk' ? 1 : 0)} ${UNIT_LABELS[f.unit] || 'g'})` : ''}</div>
         <div class="log-item-detail">${fmt(f.kcal)} kcal · E ${fmt(f.protein, 1)} g · K ${fmt(f.carbs, 1)} g · F ${fmt(f.fat, 1)} g · Ba ${fmt(f.fiber, 1)} g</div>
       </div>
       <button class="log-item-remove" data-remove-food="${f.id}" aria-label="Eintrag löschen" title="Löschen">✕</button>
@@ -968,7 +969,7 @@ function renderOcrStatus(message) {
   el.hidden = false;
   if (pendingOcrFood) {
     el.classList.add('ocr-pending');
-    el.innerHTML = `${message || 'Werte aus Foto übernommen – bitte prüfen.'} Trage Namen und gegessene Menge (g) oben ein und klicke „+ Hinzufügen“.<button type="button" id="ocrDiscardBtn">Scan verwerfen</button>`;
+    el.innerHTML = `${message || 'Werte aus Foto übernommen – bitte prüfen.'} Trage Namen und gegessene Menge in g oder ml oben ein und klicke „+ Hinzufügen“.<button type="button" id="ocrDiscardBtn">Scan verwerfen</button>`;
   } else {
     el.classList.remove('ocr-pending');
     el.textContent = message;
@@ -1037,13 +1038,14 @@ function wireEvents() {
   $('#foodForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const name = $('#foodName').value.trim();
-    const grams = Number($('#foodGrams').value) || 100;
+    const amount = Number($('#foodAmount').value) || 0;
+    const unit = $('#foodUnit').value;
     const manualKcal = $('#foodKcalManual').value;
     const known = getFoodDB().find((f) => f.name.toLowerCase() === name.toLowerCase());
     let entry;
     if (manualKcal !== '') {
       entry = {
-        name, grams: null,
+        name, amount, unit,
         kcal: Number(manualKcal) || 0,
         protein: Number($('#foodProteinManual').value) || 0,
         carbs: Number($('#foodCarbsManual').value) || 0,
@@ -1051,12 +1053,20 @@ function wireEvents() {
         fiber: Number($('#foodFiberManual').value) || 0,
       };
     } else if (known) {
+      let grams;
+      if (unit === 'stk') {
+        if (!known.gramsPerPiece) { alert(`Für "${known.name}" ist kein Stückgewicht hinterlegt – bitte g oder ml wählen.`); return; }
+        grams = amount * known.gramsPerPiece;
+      } else {
+        grams = amount;
+      }
       const factor = grams / 100;
-      entry = { name, grams, kcal: known.kcal * factor, protein: known.protein * factor, carbs: known.carbs * factor, fat: known.fat * factor, fiber: known.fiber * factor };
+      entry = { name, amount, unit, kcal: known.kcal * factor, protein: known.protein * factor, carbs: known.carbs * factor, fat: known.fat * factor, fiber: known.fiber * factor };
     } else if (pendingOcrFood) {
-      const factor = grams / 100;
+      if (unit === 'stk') { alert('Gescannte Nährwerte gelten pro 100 g/ml – bitte g oder ml wählen.'); return; }
+      const factor = amount / 100;
       const p = pendingOcrFood;
-      entry = { name, grams, kcal: p.kcal * factor, protein: p.protein * factor, carbs: p.carbs * factor, fat: p.fat * factor, fiber: p.fiber * factor };
+      entry = { name, amount, unit, kcal: p.kcal * factor, protein: p.protein * factor, carbs: p.carbs * factor, fat: p.fat * factor, fiber: p.fiber * factor };
       upsertCustomFood({ name, kcal: p.kcal, protein: p.protein, carbs: p.carbs, fat: p.fat, fiber: p.fiber });
       setupStaticLists();
     } else {
@@ -1066,7 +1076,7 @@ function wireEvents() {
     addFoodEntry(selectedDate, entry);
     pendingOcrFood = null;
     renderOcrStatus();
-    e.target.reset(); $('#foodGrams').value = 100;
+    e.target.reset(); $('#foodAmount').value = 100; $('#foodUnit').value = 'g';
     ['#foodKcalManual', '#foodProteinManual', '#foodCarbsManual', '#foodFatManual', '#foodFiberManual'].forEach((s) => $(s).value = '');
     renderAll();
   });
