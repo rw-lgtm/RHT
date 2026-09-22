@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ernährungs- &amp; Bewegungs-Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1>Ernährungs- &amp; Bewegungs-Dashboard</h1>
+      <p class="subtitle">Iss, bewege dich, verstehe deine Bilanz &mdash; ohne Wertung.</p>
+    </div>
+    <div class="topbar-actions">
+      <button id="themeToggle" class="btn btn-ghost" type="button" title="Hell/Dunkel umschalten" aria-label="Hell/Dunkel umschalten">🌓</button>
+      <button id="settingsBtn" class="btn btn-ghost" type="button">⚙️ Profil &amp; Ziele</button>
+    </div>
+  </header>
+
+  <nav class="daynav">
+    <button id="prevDay" class="btn btn-ghost" type="button" aria-label="Vorheriger Tag">←</button>
+    <input type="date" id="dayPicker">
+    <button id="nextDay" class="btn btn-ghost" type="button" aria-label="Nächster Tag">→</button>
+    <button id="todayBtn" class="btn btn-secondary" type="button">Heute</button>
+  </nav>
+
+  <main>
+
+    <!-- STAT TILES -->
+    <section class="card" aria-label="Tagesübersicht">
+      <h2>Heute im Überblick</h2>
+      <div class="tiles" id="statTiles"></div>
+      <div class="macro-bars" id="macroBars"></div>
+    </section>
+
+    <div class="two-col">
+      <!-- FOOD LOG -->
+      <section class="card">
+        <h2>Ernährung</h2>
+        <form id="foodForm" class="inline-form">
+          <input list="foodList" id="foodName" placeholder="Lebensmittel (z. B. Hähnchenbrust)" required autocomplete="off">
+          <datalist id="foodList"></datalist>
+          <input type="number" id="foodGrams" placeholder="Gramm" min="1" value="100" required>
+          <button type="submit" class="btn btn-primary">+ Hinzufügen</button>
+        </form>
+        <details id="foodManualDetails">
+          <summary>Manuell eingeben (unbekanntes Lebensmittel)</summary>
+          <div class="manual-grid">
+            <label>kcal <input type="number" id="foodKcalManual" min="0"></label>
+            <label>Eiweiß (g) <input type="number" id="foodProteinManual" min="0" step="0.1"></label>
+            <label>Kohlenhydrate (g) <input type="number" id="foodCarbsManual" min="0" step="0.1"></label>
+            <label>Fett (g) <input type="number" id="foodFatManual" min="0" step="0.1"></label>
+            <label>Ballaststoffe (g) <input type="number" id="foodFiberManual" min="0" step="0.1"></label>
+          </div>
+        </details>
+        <ul class="log-list" id="foodLogList"></ul>
+      </section>
+
+      <!-- ACTIVITY LOG -->
+      <section class="card">
+        <h2>Bewegung</h2>
+        <form id="activityForm" class="inline-form">
+          <select id="activityType" required></select>
+          <input type="number" id="activityMinutes" placeholder="Minuten" min="1" value="30" required>
+          <button type="submit" class="btn btn-primary">+ Hinzufügen</button>
+        </form>
+        <details id="activityManualDetails">
+          <summary>Kalorien manuell eingeben</summary>
+          <div class="manual-grid">
+            <label>kcal verbrannt <input type="number" id="activityKcalManual" min="0"></label>
+          </div>
+        </details>
+        <ul class="log-list" id="activityLogList"></ul>
+      </section>
+    </div>
+
+    <!-- WEIGHT -->
+    <section class="card">
+      <h2>Körpergewicht</h2>
+      <form id="weightForm" class="inline-form">
+        <input type="number" id="weightInput" placeholder="Gewicht heute (kg)" min="20" max="400" step="0.1">
+        <button type="submit" class="btn btn-primary">Speichern</button>
+        <span class="hint">Am besten morgens, nüchtern, gleiche Bedingungen &mdash; Schwankungen von Tag zu Tag sind normal.</span>
+      </form>
+      <div class="cycle-row" id="cycleRow" hidden>
+        <button type="button" id="periodToggleBtn" class="btn btn-ghost">Periode heute: Aus</button>
+        <span class="hint" id="cyclePhaseText"></span>
+      </div>
+    </section>
+
+    <!-- TRENDS -->
+    <section class="card">
+      <div class="card-header-row">
+        <h2>Verlauf</h2>
+        <div class="range-toggle" id="rangeToggle">
+          <button data-range="7" class="btn btn-ghost active" type="button">7 Tage</button>
+          <button data-range="14" class="btn btn-ghost" type="button">14 Tage</button>
+          <button data-range="30" class="btn btn-ghost" type="button">30 Tage</button>
+        </div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Kalorien: aufgenommen vs. verbrannt</h3>
+        <div id="chartCalories" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Bilanz pro Tag (Defizit / Überschuss)</h3>
+        <div id="chartBalance" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Makronährstoffe</h3>
+        <div id="chartMacros" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Gewichtsverlauf</h3>
+        <div id="chartWeight" class="chart"></div>
+      </div>
+    </section>
+
+    <!-- INSIGHTS -->
+    <section class="card" id="insightsCard">
+      <h2>Erkenntnisse</h2>
+      <div id="insightsBody"></div>
+    </section>
+
+    <!-- ANALYSIS & TIPS -->
+    <section class="card" id="analysisCard">
+      <h2>Analyse &amp; Tipps</h2>
+      <p class="hint">Automatisch aus deinen geloggten Daten für den oben gewählten Zeitraum erstellt (7/14/30 Tage) &mdash; keine medizinische Beratung. Markiere Tipps mit 📌, um nach einer Woche zu sehen, ob sich der jeweilige Wert verbessert hat.</p>
+      <div id="focusTipsBlock"></div>
+      <div class="findings-grid" id="findingsGrid"></div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Alle Daten bleiben lokal in deinem Browser (localStorage) &mdash; nichts wird an einen Server gesendet. Dieses Dashboard ersetzt keine medizinische oder ernährungswissenschaftliche Beratung; bei anhaltenden Beschwerden oder starkem Unwohlsein mit dem eigenen Körper kann es helfen, mit einer Ärztin/einem Arzt oder einer Ernährungsfachkraft zu sprechen.</p>
+    <div class="footer-actions">
+      <button id="exportBtn" class="btn btn-ghost" type="button">Daten exportieren</button>
+      <button id="importBtn" class="btn btn-ghost" type="button">Daten importieren</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </footer>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-backdrop" id="settingsModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">Profil &amp; Ziele</h2>
+      <form id="settingsForm" class="settings-grid">
+        <label>Geschlecht (für Kalorienschätzung)
+          <select id="pSex">
+            <option value="w">weiblich</option>
+            <option value="m">männlich</option>
+            <option value="d">divers</option>
+          </select>
+        </label>
+        <label>Alter (Jahre) <input type="number" id="pAge" min="10" max="100" required></label>
+        <label>Körpergröße (cm) <input type="number" id="pHeight" min="100" max="230" required></label>
+        <label>Aktuelles Gewicht (kg) <input type="number" id="pWeight" min="30" max="300" step="0.1" required></label>
+        <label>Alltagsaktivität (ohne geloggten Sport)
+          <select id="pActivity">
+            <option value="1.2">Überwiegend sitzend</option>
+            <option value="1.3">Leicht aktiv (viel Stehen/Gehen im Alltag)</option>
+            <option value="1.4">Aktiv (körperlich fordernder Alltag)</option>
+          </select>
+        </label>
+        <label>Eiweiß-Ziel (g pro kg Körpergewicht) <input type="number" id="pProtein" min="0.8" max="3" step="0.1" required></label>
+        <label>Fett-Ziel (g pro kg Körpergewicht) <input type="number" id="pFat" min="0.4" max="2" step="0.1" required></label>
+        <label>Ballaststoff-Ziel (g pro Tag) <input type="number" id="pFiber" min="10" max="60" required></label>
+        <label>Angestrebtes Kaloriendefizit (kcal pro Tag) <input type="number" id="pDeficit" min="0" max="1500" step="50" required></label>
+        <p class="hint modal-hint">Ein Defizit von 500 kcal/Tag entspricht grob 0,5 kg Fettverlust pro Woche. Sehr große Defizite (&gt; 1000 kcal) sind selten sinnvoll oder durchhaltbar.</p>
+
+        <label class="checkbox-label modal-hint"><input type="checkbox" id="pTrackCycle"> Zyklus tracken (Periode markieren, Phase schätzen)</label>
+        <label>Ø Zykluslänge (Tage) <input type="number" id="pCycleLength" min="18" max="45" value="28"></label>
+        <label>Ø Periodenlänge (Tage) <input type="number" id="pPeriodLength" min="1" max="10" value="5"></label>
+        <p class="hint modal-hint">Wird genutzt, um dir bei Gewichts-/Bilanz-Auffälligkeiten in den Erkenntnissen einen Hinweis zu geben, falls sie mit Periode/Lutealphase zusammenfallen (Wassereinlagerungen). Rein informativ, ersetzt keine Zyklus-App.</p>
+        <div class="modal-actions">
+          <button type="button" id="settingsCancel" class="btn btn-ghost">Abbrechen</button>
+          <button type="submit" class="btn btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="tooltip" id="chartTooltip" hidden></div>
+
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>
