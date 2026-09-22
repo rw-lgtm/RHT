@@ -179,6 +179,12 @@ body {
 .cycle-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 .btn.period-on { background: color-mix(in srgb, var(--diverging-warm) 20%, transparent); border-color: var(--diverging-warm); color: var(--diverging-warm); }
 
+.ocr-row { margin-bottom: 6px; }
+#ocrStatus { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#ocrStatus.ocr-pending { color: var(--series-1); font-weight: 600; }
+#ocrDiscardBtn { font: inherit; font-size: 0.72rem; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+#ocrDiscardBtn:hover { border-color: var(--status-critical); color: var(--status-critical); }
+
 details { margin-bottom: 10px; }
 details summary { cursor: pointer; font-size: 0.82rem; color: var(--text-secondary); }
 .manual-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 8px; margin-top: 8px; }
