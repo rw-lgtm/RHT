@@ -46,6 +46,11 @@
           <input type="number" id="foodGrams" placeholder="Gramm" min="1" value="100" required>
           <button type="submit" class="btn btn-primary">+ Hinzufügen</button>
         </form>
+        <div class="ocr-row">
+          <button type="button" id="scanPhotoBtn" class="btn btn-ghost">📷 Nährwerte aus Foto übernehmen</button>
+          <input type="file" id="nutritionPhotoInput" accept="image/*" hidden>
+        </div>
+        <p class="hint" id="ocrStatus" hidden></p>
         <details id="foodManualDetails">
           <summary>Manuell eingeben (unbekanntes Lebensmittel)</summary>
           <div class="manual-grid">

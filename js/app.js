@@ -64,7 +64,7 @@ const KCAL_PER_KG_FAT = 7700;
    Storage
    ========================================================================= */
 
-const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1' };
+const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1', customFoods: 'nutrifit_customfoods_v1' };
 
 function defaultProfile() {
   return {
@@ -97,6 +97,17 @@ function loadFocusTips() {
 }
 function saveFocusTips(list) { localStorage.setItem(STORAGE_KEYS.focus, JSON.stringify(list)); }
 
+function loadCustomFoods() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.customFoods)) || []; } catch (e) { return []; }
+}
+function saveCustomFoods(list) { localStorage.setItem(STORAGE_KEYS.customFoods, JSON.stringify(list)); }
+function upsertCustomFood(food) {
+  const list = loadCustomFoods().filter((f) => f.name.toLowerCase() !== food.name.toLowerCase());
+  list.push(food);
+  saveCustomFoods(list);
+}
+function getFoodDB() { return FOOD_DB.concat(loadCustomFoods()); }
+
 /* =========================================================================
    State
    ========================================================================= */
@@ -108,6 +119,7 @@ if (!profile) profile = defaultProfile();
 let days = loadDays();
 let selectedDate = todayKey();
 let selectedRange = 7;
+let pendingOcrFood = null; // { kcal, protein, carbs, fat, fiber } per 100 g, staged from a scanned photo
 
 /* =========================================================================
    Date helpers
@@ -909,11 +921,96 @@ function renderAll() {
 }
 
 /* =========================================================================
+   OCR: scan a nutrition label photo and prefill food values
+   ========================================================================= */
+
+let tesseractLoadPromise = null;
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve();
+  if (!tesseractLoadPromise) {
+    tesseractLoadPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('Texterkennung konnte nicht geladen werden (Internetverbindung prüfen).'));
+      document.head.appendChild(s);
+    });
+  }
+  return tesseractLoadPromise;
+}
+
+function parseNutritionText(text) {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  const num = '(\\d{1,4}(?:[.,]\\d{1,2})?)';
+  const patterns = [
+    { key: 'kcal', re: new RegExp(num + '\\s*kcal', 'i') },
+    { key: 'protein', re: new RegExp('(?:eiwei[ßs]\\w*|protein\\w*).*?' + num + '\\s*g', 'i') },
+    { key: 'carbs', re: new RegExp('(?:kohlenhydrate\\w*|carbohydrate\\w*|carbs).*?' + num + '\\s*g', 'i'), skipIfStartsWith: 'davon' },
+    { key: 'fat', re: new RegExp('(?:\\bfett\\b|\\bfat\\b).*?' + num + '\\s*g', 'i'), skipIfStartsWith: 'davon' },
+    { key: 'fiber', re: new RegExp('(?:ballaststoffe\\w*|fib(?:er|re)\\w*).*?' + num + '\\s*g', 'i') },
+  ];
+  const result = {};
+  lines.forEach((line) => {
+    const lower = line.toLowerCase();
+    patterns.forEach((p) => {
+      if (result[p.key] != null) return;
+      if (p.skipIfStartsWith && lower.startsWith(p.skipIfStartsWith)) return;
+      const m = line.match(p.re);
+      if (m) result[p.key] = parseFloat(m[1].replace(',', '.'));
+    });
+  });
+  return result;
+}
+
+function renderOcrStatus(message) {
+  const el = $('#ocrStatus');
+  if (!pendingOcrFood && !message) { el.hidden = true; el.innerHTML = ''; el.classList.remove('ocr-pending'); return; }
+  el.hidden = false;
+  if (pendingOcrFood) {
+    el.classList.add('ocr-pending');
+    el.innerHTML = `${message || 'Werte aus Foto übernommen – bitte prüfen.'} Trage Namen und gegessene Menge (g) oben ein und klicke „+ Hinzufügen“.<button type="button" id="ocrDiscardBtn">Scan verwerfen</button>`;
+  } else {
+    el.classList.remove('ocr-pending');
+    el.textContent = message;
+  }
+}
+
+async function handleNutritionPhoto(file) {
+  renderOcrStatus('Lade Texterkennung… (einmalig, danach läuft alles lokal im Browser)');
+  try {
+    await loadTesseract();
+    const { data } = await window.Tesseract.recognize(file, 'deu+eng', {
+      logger: (m) => {
+        if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+          renderOcrStatus(`Scanne Foto… ${Math.round(m.progress * 100)}%`);
+        }
+      },
+    });
+    const values = parseNutritionText(data.text);
+    const found = Object.keys(values).length;
+    if (!found) {
+      pendingOcrFood = null;
+      renderOcrStatus('Keine Nährwerte erkannt – bitte ein schärferes/gerades Foto versuchen oder manuell eingeben.');
+      return;
+    }
+    pendingOcrFood = {
+      kcal: values.kcal || 0, protein: values.protein || 0, carbs: values.carbs || 0,
+      fat: values.fat || 0, fiber: values.fiber || 0,
+    };
+    $('#foodName').focus();
+    renderOcrStatus(`${found} von 5 Werten erkannt (angenommen: pro 100 g).`);
+  } catch (err) {
+    pendingOcrFood = null;
+    renderOcrStatus('Fehler bei der Texterkennung: ' + err.message);
+  }
+}
+
+/* =========================================================================
    Setup: food datalist, activity select
    ========================================================================= */
 
 function setupStaticLists() {
-  $('#foodList').innerHTML = FOOD_DB.map((f) => `<option value="${escapeHtml(f.name)}">`).join('');
+  $('#foodList').innerHTML = getFoodDB().map((f) => `<option value="${escapeHtml(f.name)}">`).join('');
   $('#activityType').innerHTML = Object.keys(ACTIVITY_MET).map((k) => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
 }
 
@@ -942,7 +1039,7 @@ function wireEvents() {
     const name = $('#foodName').value.trim();
     const grams = Number($('#foodGrams').value) || 100;
     const manualKcal = $('#foodKcalManual').value;
-    const known = FOOD_DB.find((f) => f.name.toLowerCase() === name.toLowerCase());
+    const known = getFoodDB().find((f) => f.name.toLowerCase() === name.toLowerCase());
     let entry;
     if (manualKcal !== '') {
       entry = {
@@ -956,14 +1053,34 @@ function wireEvents() {
     } else if (known) {
       const factor = grams / 100;
       entry = { name, grams, kcal: known.kcal * factor, protein: known.protein * factor, carbs: known.carbs * factor, fat: known.fat * factor, fiber: known.fiber * factor };
+    } else if (pendingOcrFood) {
+      const factor = grams / 100;
+      const p = pendingOcrFood;
+      entry = { name, grams, kcal: p.kcal * factor, protein: p.protein * factor, carbs: p.carbs * factor, fat: p.fat * factor, fiber: p.fiber * factor };
+      upsertCustomFood({ name, kcal: p.kcal, protein: p.protein, carbs: p.carbs, fat: p.fat, fiber: p.fiber });
+      setupStaticLists();
     } else {
-      alert('Unbekanntes Lebensmittel: Bitte über "Manuell eingeben" die Nährwerte ergänzen (kcal ist Pflichtfeld dafür).');
+      alert('Unbekanntes Lebensmittel: Bitte über "Manuell eingeben" die Nährwerte ergänzen (kcal ist Pflichtfeld dafür) oder ein Foto der Nährwerttabelle scannen.');
       return;
     }
     addFoodEntry(selectedDate, entry);
+    pendingOcrFood = null;
+    renderOcrStatus();
     e.target.reset(); $('#foodGrams').value = 100;
     ['#foodKcalManual', '#foodProteinManual', '#foodCarbsManual', '#foodFatManual', '#foodFiberManual'].forEach((s) => $(s).value = '');
     renderAll();
+  });
+
+  $('#scanPhotoBtn').addEventListener('click', () => $('#nutritionPhotoInput').click());
+  $('#nutritionPhotoInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleNutritionPhoto(file);
+    e.target.value = '';
+  });
+  $('#ocrStatus').addEventListener('click', (e) => {
+    if (!e.target.closest('#ocrDiscardBtn')) return;
+    pendingOcrFood = null;
+    renderOcrStatus();
   });
 
   $('#foodLogList').addEventListener('click', (e) => {
@@ -1071,7 +1188,7 @@ function wireEvents() {
   });
 
   $('#exportBtn').addEventListener('click', () => {
-    const data = { profile, days };
+    const data = { profile, days, customFoods: loadCustomFoods(), focusTips: loadFocusTips() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1088,6 +1205,9 @@ function wireEvents() {
         const data = JSON.parse(reader.result);
         if (data.profile) { profile = Object.assign(defaultProfile(), data.profile); saveProfile(profile); }
         if (data.days) { days = data.days; saveDays(days); }
+        if (data.customFoods) saveCustomFoods(data.customFoods);
+        if (data.focusTips) saveFocusTips(data.focusTips);
+        setupStaticLists();
         renderAll();
         alert('Daten erfolgreich importiert.');
       } catch (err) { alert('Import fehlgeschlagen: Datei ist kein gültiges Export-JSON.'); }
