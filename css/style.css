@@ -283,6 +283,32 @@ details summary { cursor: pointer; font-size: 0.82rem; color: var(--text-seconda
   width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
   border: 1px solid var(--border);
 }
+.modal.modal-wide { max-width: 640px; }
+.modal hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+.modal h3 { margin: 0 0 10px; font-size: 0.95rem; }
+
+.recipe-name-row { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
+.recipe-name-row input { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--page-plane); color: var(--text-primary); font: inherit; }
+
+.ingredient-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.ingredient-row .ingredient-name { flex: 1; min-width: 140px; }
+.ingredient-row input, .ingredient-row select {
+  padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--page-plane); color: var(--text-primary); font: inherit;
+}
+.ingredient-row .ingredient-amount { width: 90px; }
+
+.recipe-yield-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 6px; }
+.recipe-yield-row label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); }
+.recipe-yield-row input, .recipe-yield-row select {
+  padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--page-plane); color: var(--text-primary); font: inherit;
+}
+
+.recipe-item-detail { color: var(--text-muted); font-size: 0.78rem; }
+.recipe-item-actions { display: flex; gap: 6px; }
+.recipe-item-actions button { font: inherit; font-size: 0.76rem; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.recipe-item-actions button:hover { border-color: var(--series-1); color: var(--series-1); }
 .modal h2 { margin-top: 0; }
 .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .settings-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); }

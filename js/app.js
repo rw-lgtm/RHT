@@ -16,8 +16,8 @@ const FOOD_DB = [
   { name: 'Vollkornreis (gekocht)', kcal: 123, protein: 2.6, carbs: 25, fat: 1, fiber: 1.8 },
   { name: 'Weißer Reis (gekocht)', kcal: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4 },
   { name: 'Vollkornnudeln (gekocht)', kcal: 124, protein: 5, carbs: 25, fat: 1, fiber: 4 },
-  { name: 'Kartoffeln (gekocht)', kcal: 87, protein: 2, carbs: 20, fat: 0.1, fiber: 1.8 },
-  { name: 'Süßkartoffel (gekocht)', kcal: 90, protein: 2, carbs: 21, fat: 0.1, fiber: 3 },
+  { name: 'Kartoffeln (gekocht)', kcal: 87, protein: 2, carbs: 20, fat: 0.1, fiber: 1.8, gramsPerPiece: 150 },
+  { name: 'Süßkartoffel (gekocht)', kcal: 90, protein: 2, carbs: 21, fat: 0.1, fiber: 3, gramsPerPiece: 200 },
   { name: 'Haferflocken (roh)', kcal: 372, protein: 13, carbs: 60, fat: 7, fiber: 10 },
   { name: 'Vollkornbrot', kcal: 216, protein: 8, carbs: 40, fat: 3, fiber: 7 },
   { name: 'Weißbrot', kcal: 265, protein: 9, carbs: 49, fat: 3.2, fiber: 2.7 },
@@ -26,8 +26,8 @@ const FOOD_DB = [
   { name: 'Beeren (gemischt)', kcal: 50, protein: 0.8, carbs: 11, fat: 0.4, fiber: 3 },
   { name: 'Brokkoli (gekocht)', kcal: 35, protein: 2.4, carbs: 7, fat: 0.4, fiber: 3.3 },
   { name: 'Gemüse gemischt / Salat', kcal: 25, protein: 2, carbs: 4, fat: 0.3, fiber: 2 },
-  { name: 'Tomate', kcal: 18, protein: 0.9, carbs: 3.9, fat: 0.2, fiber: 1.2 },
-  { name: 'Avocado', kcal: 160, protein: 2, carbs: 9, fat: 15, fiber: 7 },
+  { name: 'Tomate', kcal: 18, protein: 0.9, carbs: 3.9, fat: 0.2, fiber: 1.2, gramsPerPiece: 120 },
+  { name: 'Avocado', kcal: 160, protein: 2, carbs: 9, fat: 15, fiber: 7, gramsPerPiece: 200 },
   { name: 'Olivenöl', kcal: 884, protein: 0, carbs: 0, fat: 100, fiber: 0 },
   { name: 'Butter', kcal: 717, protein: 0.9, carbs: 0.1, fat: 81, fiber: 0 },
   { name: 'Mandeln', kcal: 579, protein: 21, carbs: 22, fat: 50, fiber: 12.5 },
@@ -44,7 +44,7 @@ const FOOD_DB = [
   { name: 'Hafermilch (Oatly Barista)', kcal: 61, protein: 1.1, carbs: 7.1, fat: 3.0, fiber: 0.8 },
   { name: 'Cottage Cheese', kcal: 92, protein: 12, carbs: 1.6, fat: 4.2, fiber: 0 },
   { name: 'Kefir 1,5%', kcal: 45, protein: 3.8, carbs: 4.1, fat: 1.5, fiber: 0 },
-  { name: 'Karotten (roh)', kcal: 35, protein: 0.9, carbs: 6.5, fat: 0.2, fiber: 2.9 },
+  { name: 'Karotten (roh)', kcal: 35, protein: 0.9, carbs: 6.5, fat: 0.2, fiber: 2.9, gramsPerPiece: 60 },
   { name: 'Spitzkraut (roh)', kcal: 24, protein: 1.4, carbs: 3.5, fat: 0.2, fiber: 2.8 },
   { name: 'Halloumi', kcal: 320, protein: 22, carbs: 2, fat: 25, fiber: 0 },
   { name: 'Feta', kcal: 264, protein: 14, carbs: 1.5, fat: 22, fiber: 0 },
@@ -52,7 +52,7 @@ const FOOD_DB = [
   { name: 'Hühnerbrühe (zubereitet)', kcal: 7, protein: 0.6, carbs: 0.3, fat: 0.4, fiber: 0 },
   { name: 'Rinderbrühe (zubereitet)', kcal: 9, protein: 0.8, carbs: 0.3, fat: 0.5, fiber: 0 },
   { name: 'Pasta (gekocht)', kcal: 131, protein: 5, carbs: 25, fat: 1.1, fiber: 1.8 },
-  { name: 'Zucchini (roh)', kcal: 17, protein: 1.2, carbs: 2.1, fat: 0.3, fiber: 1.1 },
+  { name: 'Zucchini (roh)', kcal: 17, protein: 1.2, carbs: 2.1, fat: 0.3, fiber: 1.1, gramsPerPiece: 200 },
   { name: 'Hühnchen (gegart)', kcal: 190, protein: 24, carbs: 0, fat: 10, fiber: 0 },
   { name: 'Ayran', kcal: 37, protein: 1.6, carbs: 2.5, fat: 1.8, fiber: 0 },
   { name: 'Cashewkerne', kcal: 553, protein: 18, carbs: 30, fat: 44, fiber: 3.3 },
@@ -62,7 +62,7 @@ const FOOD_DB = [
   { name: 'Couscous (gekocht)', kcal: 112, protein: 3.8, carbs: 23, fat: 0.2, fiber: 1.4 },
   { name: 'Bulgur (gekocht)', kcal: 83, protein: 3.1, carbs: 18.6, fat: 0.2, fiber: 4.5 },
   { name: 'Leinöl', kcal: 884, protein: 0, carbs: 0, fat: 100, fiber: 0 },
-  { name: 'Zwetschgen', kcal: 46, protein: 0.7, carbs: 9.6, fat: 0.3, fiber: 1.9 },
+  { name: 'Zwetschgen', kcal: 46, protein: 0.7, carbs: 9.6, fat: 0.3, fiber: 1.9, gramsPerPiece: 15 },
   { name: 'Topfen 20%', kcal: 98, protein: 12, carbs: 4, fat: 4.1, fiber: 0 },
   { name: 'Weißwein (trocken)', kcal: 82, protein: 0.1, carbs: 2.5, fat: 0, fiber: 0 },
   { name: 'Rotwein (trocken)', kcal: 85, protein: 0.1, carbs: 2.6, fat: 0, fiber: 0 },
@@ -94,7 +94,7 @@ const UNIT_LABELS = { g: 'g', ml: 'ml', stk: 'Stück' };
    Storage
    ========================================================================= */
 
-const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1', customFoods: 'nutrifit_customfoods_v1' };
+const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1', customFoods: 'nutrifit_customfoods_v1', recipes: 'nutrifit_recipes_v1' };
 
 function defaultProfile() {
   return {
@@ -136,7 +136,18 @@ function upsertCustomFood(food) {
   list.push(food);
   saveCustomFoods(list);
 }
-function getFoodDB() { return FOOD_DB.concat(loadCustomFoods()); }
+function loadRecipes() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.recipes)) || []; } catch (e) { return []; }
+}
+function saveRecipes(list) { localStorage.setItem(STORAGE_KEYS.recipes, JSON.stringify(list)); }
+function upsertRecipe(recipe) {
+  const list = loadRecipes().filter((r) => r.id !== recipe.id);
+  list.push(recipe);
+  saveRecipes(list);
+}
+function deleteRecipeById(id) { saveRecipes(loadRecipes().filter((r) => r.id !== id)); }
+
+function getFoodDB() { return FOOD_DB.concat(loadCustomFoods()).concat(loadRecipes()); }
 
 /* =========================================================================
    State
@@ -1036,6 +1047,132 @@ async function handleNutritionPhoto(file) {
 }
 
 /* =========================================================================
+   Recipes: build a home-made dish from ingredients, computed per 100 g/ml
+   ========================================================================= */
+
+let recipeEditId = null;
+
+function resolveIngredientGrams(name, amount, unit) {
+  const food = getFoodDB().find((f) => f.name.toLowerCase() === name.toLowerCase());
+  if (!food) return { error: `Unbekannte Zutat: "${name}". Bitte einen Namen aus der Liste wählen oder zuerst als Lebensmittel anlegen.` };
+  if (unit === 'stk') {
+    if (!food.gramsPerPiece) return { error: `Für "${food.name}" ist kein Stückgewicht hinterlegt – bitte g oder ml wählen.` };
+    return { food, grams: amount * food.gramsPerPiece };
+  }
+  return { food, grams: amount };
+}
+
+function readIngredientRows() {
+  return $$('#recipeIngredients .ingredient-row').map((row) => ({
+    name: row.querySelector('.ingredient-name').value.trim(),
+    amount: Number(row.querySelector('.ingredient-amount').value) || 0,
+    unit: row.querySelector('.ingredient-unit').value,
+  })).filter((r) => r.name);
+}
+
+function computeRecipeTotals() {
+  const rows = readIngredientRows();
+  const yieldAmount = Number($('#recipeYieldAmount').value) || 0;
+  if (!rows.length) return { error: 'Bitte mindestens eine Zutat angeben.' };
+  if (!yieldAmount) return { error: 'Bitte angeben, wie viel das Rezept insgesamt ergibt.' };
+  const sum = { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+  for (const row of rows) {
+    const resolved = resolveIngredientGrams(row.name, row.amount, row.unit);
+    if (resolved.error) return { error: resolved.error };
+    const factor = resolved.grams / 100;
+    sum.kcal += resolved.food.kcal * factor;
+    sum.protein += resolved.food.protein * factor;
+    sum.carbs += resolved.food.carbs * factor;
+    sum.fat += resolved.food.fat * factor;
+    sum.fiber += resolved.food.fiber * factor;
+  }
+  const scale = 100 / yieldAmount;
+  return {
+    per100: { kcal: sum.kcal * scale, protein: sum.protein * scale, carbs: sum.carbs * scale, fat: sum.fat * scale, fiber: sum.fiber * scale },
+    yieldAmount, yieldUnit: $('#recipeYieldUnit').value, ingredients: rows,
+  };
+}
+
+function updateRecipePreview() {
+  const result = computeRecipeTotals();
+  const el = $('#recipePreview');
+  if (result.error) { el.textContent = result.error; return; }
+  const p = result.per100;
+  el.textContent = `Pro 100 ${result.yieldUnit}: ${fmt(p.kcal)} kcal · E ${fmt(p.protein, 1)} g · K ${fmt(p.carbs, 1)} g · F ${fmt(p.fat, 1)} g · Ba ${fmt(p.fiber, 1)} g`;
+}
+
+function addIngredientRow(prefill) {
+  const row = document.createElement('div');
+  row.className = 'ingredient-row';
+  row.innerHTML = `
+    <input list="foodList" class="ingredient-name" placeholder="Zutat" required autocomplete="off">
+    <input type="number" class="ingredient-amount" placeholder="Menge" min="0.1" step="0.1" required>
+    <select class="ingredient-unit">
+      <option value="g">g</option>
+      <option value="ml">ml</option>
+      <option value="stk">Stück</option>
+    </select>
+    <button type="button" class="ingredient-remove log-item-remove" aria-label="Zutat entfernen" title="Entfernen">✕</button>
+  `;
+  if (prefill) {
+    row.querySelector('.ingredient-name').value = prefill.name;
+    row.querySelector('.ingredient-amount').value = prefill.amount;
+    row.querySelector('.ingredient-unit').value = prefill.unit;
+  }
+  row.querySelectorAll('input, select').forEach((el) => el.addEventListener('input', updateRecipePreview));
+  row.querySelector('.ingredient-remove').addEventListener('click', () => { row.remove(); updateRecipePreview(); });
+  $('#recipeIngredients').appendChild(row);
+}
+
+function resetRecipeForm() {
+  recipeEditId = null;
+  $('#recipeForm').reset();
+  $('#recipeIngredients').innerHTML = '';
+  addIngredientRow();
+  $('#recipeFormTitle').textContent = 'Neues Rezept';
+  $('#recipeCancelEdit').hidden = true;
+  updateRecipePreview();
+}
+
+function renderRecipeList() {
+  const recipes = loadRecipes();
+  const list = $('#recipeList');
+  if (!recipes.length) { list.innerHTML = `<li class="log-empty">Noch keine Rezepte angelegt.</li>`; return; }
+  list.innerHTML = recipes.map((r) => `
+    <li>
+      <div class="log-item-main">
+        <div class="log-item-name">${escapeHtml(r.name)}</div>
+        <div class="recipe-item-detail">pro 100 ${r.yieldUnit}: ${fmt(r.kcal)} kcal · E ${fmt(r.protein, 1)} g · K ${fmt(r.carbs, 1)} g · F ${fmt(r.fat, 1)} g · Ba ${fmt(r.fiber, 1)} g · ergibt ${fmt(r.yieldAmount)} ${r.yieldUnit}</div>
+      </div>
+      <div class="recipe-item-actions">
+        <button type="button" data-edit-recipe="${r.id}">Bearbeiten</button>
+        <button type="button" data-delete-recipe="${r.id}">Löschen</button>
+      </div>
+    </li>`).join('');
+}
+
+function openRecipeModal() {
+  renderRecipeList();
+  resetRecipeForm();
+  $('#recipeModal').hidden = false;
+}
+function closeRecipeModal() { $('#recipeModal').hidden = true; }
+
+function editRecipe(id) {
+  const recipe = loadRecipes().find((r) => r.id === id);
+  if (!recipe) return;
+  recipeEditId = id;
+  $('#recipeName').value = recipe.name;
+  $('#recipeYieldAmount').value = recipe.yieldAmount;
+  $('#recipeYieldUnit').value = recipe.yieldUnit;
+  $('#recipeIngredients').innerHTML = '';
+  recipe.ingredients.forEach((ing) => addIngredientRow(ing));
+  $('#recipeFormTitle').textContent = `„${recipe.name}“ bearbeiten`;
+  $('#recipeCancelEdit').hidden = false;
+  updateRecipePreview();
+}
+
+/* =========================================================================
    Setup: food datalist, activity select
    ========================================================================= */
 
@@ -1120,6 +1257,38 @@ function wireEvents() {
     if (!e.target.closest('#ocrDiscardBtn')) return;
     pendingOcrFood = null;
     renderOcrStatus();
+  });
+
+  $('#recipeBtn').addEventListener('click', openRecipeModal);
+  $('#recipeModalClose').addEventListener('click', closeRecipeModal);
+  $('#recipeModal').addEventListener('click', (e) => { if (e.target === $('#recipeModal')) closeRecipeModal(); });
+  $('#addIngredientBtn').addEventListener('click', () => addIngredientRow());
+  $('#recipeYieldAmount').addEventListener('input', updateRecipePreview);
+  $('#recipeYieldUnit').addEventListener('change', updateRecipePreview);
+  $('#recipeCancelEdit').addEventListener('click', resetRecipeForm);
+
+  $('#recipeList').addEventListener('click', (e) => {
+    const editBtn = e.target.closest('[data-edit-recipe]');
+    if (editBtn) { editRecipe(editBtn.dataset.editRecipe); return; }
+    const delBtn = e.target.closest('[data-delete-recipe]');
+    if (delBtn) { deleteRecipeById(delBtn.dataset.deleteRecipe); renderRecipeList(); setupStaticLists(); }
+  });
+
+  $('#recipeForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = $('#recipeName').value.trim();
+    const result = computeRecipeTotals();
+    if (result.error) { alert(result.error); return; }
+    const recipe = {
+      id: recipeEditId || uid(), name,
+      yieldAmount: result.yieldAmount, yieldUnit: result.yieldUnit,
+      ingredients: result.ingredients,
+      kcal: result.per100.kcal, protein: result.per100.protein, carbs: result.per100.carbs, fat: result.per100.fat, fiber: result.per100.fiber,
+    };
+    upsertRecipe(recipe);
+    setupStaticLists();
+    renderRecipeList();
+    resetRecipeForm();
   });
 
   $('#foodLogList').addEventListener('click', (e) => {
@@ -1227,7 +1396,7 @@ function wireEvents() {
   });
 
   $('#exportBtn').addEventListener('click', () => {
-    const data = { profile, days, customFoods: loadCustomFoods(), focusTips: loadFocusTips() };
+    const data = { profile, days, customFoods: loadCustomFoods(), focusTips: loadFocusTips(), recipes: loadRecipes() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1246,6 +1415,7 @@ function wireEvents() {
         if (data.days) { days = data.days; saveDays(days); }
         if (data.customFoods) saveCustomFoods(data.customFoods);
         if (data.focusTips) saveFocusTips(data.focusTips);
+        if (data.recipes) saveRecipes(data.recipes);
         setupStaticLists();
         renderAll();
         alert('Daten erfolgreich importiert.');
