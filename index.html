@@ -85,6 +85,10 @@
         <button type="submit" class="btn btn-primary">Speichern</button>
         <span class="hint">Am besten morgens, nüchtern, gleiche Bedingungen &mdash; Schwankungen von Tag zu Tag sind normal.</span>
       </form>
+      <div class="cycle-row" id="cycleRow" hidden>
+        <button type="button" id="periodToggleBtn" class="btn btn-ghost">Periode heute: Aus</button>
+        <span class="hint" id="cyclePhaseText"></span>
+      </div>
     </section>
 
     <!-- TRENDS -->
@@ -171,6 +175,11 @@
         <label>Ballaststoff-Ziel (g pro Tag) <input type="number" id="pFiber" min="10" max="60" required></label>
         <label>Angestrebtes Kaloriendefizit (kcal pro Tag) <input type="number" id="pDeficit" min="0" max="1500" step="50" required></label>
         <p class="hint modal-hint">Ein Defizit von 500 kcal/Tag entspricht grob 0,5 kg Fettverlust pro Woche. Sehr große Defizite (&gt; 1000 kcal) sind selten sinnvoll oder durchhaltbar.</p>
+
+        <label class="checkbox-label modal-hint"><input type="checkbox" id="pTrackCycle"> Zyklus tracken (Periode markieren, Phase schätzen)</label>
+        <label>Ø Zykluslänge (Tage) <input type="number" id="pCycleLength" min="18" max="45" value="28"></label>
+        <label>Ø Periodenlänge (Tage) <input type="number" id="pPeriodLength" min="1" max="10" value="5"></label>
+        <p class="hint modal-hint">Wird genutzt, um dir bei Gewichts-/Bilanz-Auffälligkeiten in den Erkenntnissen einen Hinweis zu geben, falls sie mit Periode/Lutealphase zusammenfallen (Wassereinlagerungen). Rein informativ, ersetzt keine Zyklus-App.</p>
         <div class="modal-actions">
           <button type="button" id="settingsCancel" class="btn btn-ghost">Abbrechen</button>
           <button type="submit" class="btn btn-primary">Speichern</button>

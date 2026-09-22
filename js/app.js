@@ -71,6 +71,7 @@ function defaultProfile() {
     sex: 'w', age: 30, heightCm: 170, weightKg: 70,
     activityFactor: 1.2, proteinPerKg: 1.8, fatPerKg: 0.8,
     fiberTarget: 30, deficitTarget: 500,
+    trackCycle: false, cycleLengthDays: 28, periodLengthDays: 5,
   };
 }
 
@@ -173,6 +174,44 @@ function getLatestWeightUpTo(key) {
   const anyKeys = Object.keys(days).filter((k) => days[k].weightKg != null).sort();
   if (anyKeys.length) return days[anyKeys[0]].weightKg;
   return profile.weightKg;
+}
+
+/* =========================================================================
+   Cycle tracking (optional, informational only)
+   ========================================================================= */
+
+function togglePeriod(key) {
+  const day = ensureDay(key);
+  day.period = !day.period;
+  saveDays(days);
+}
+
+function findPeriodStarts() {
+  const marked = Object.keys(days).filter((k) => days[k] && days[k].period).sort();
+  const starts = [];
+  let prev = null;
+  marked.forEach((k) => {
+    if (prev === null || addDays(prev, 1) !== k) starts.push(k);
+    prev = k;
+  });
+  return starts;
+}
+
+function getCyclePhase(key) {
+  if (!profile.trackCycle) return null;
+  const isPeriod = !!(days[key] && days[key].period);
+  const starts = findPeriodStarts().filter((s) => s <= key);
+  if (!starts.length) return { isPeriod, phase: isPeriod ? 'Periode' : null, dayOfCycle: null };
+  const lastStart = starts[starts.length - 1];
+  const dayOfCycle = Math.round((keyToDate(key) - keyToDate(lastStart)) / 86400000) + 1;
+  const cycleLen = profile.cycleLengthDays || 28;
+  const periodLen = profile.periodLengthDays || 5;
+  let phase;
+  if (dayOfCycle <= periodLen) phase = 'Periode';
+  else if (dayOfCycle <= Math.round(cycleLen / 2) - 2) phase = 'Follikelphase';
+  else if (dayOfCycle <= Math.round(cycleLen / 2) + 1) phase = 'Ovulation (geschätzt)';
+  else phase = 'Lutealphase';
+  return { isPeriod, phase, dayOfCycle };
 }
 
 /* =========================================================================
@@ -304,6 +343,21 @@ function renderActivityList() {
 }
 
 function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function renderCycleRow() {
+  const row = $('#cycleRow');
+  if (!profile.trackCycle) { row.hidden = true; return; }
+  row.hidden = false;
+  const dayObj = getDay(selectedDate);
+  const isPeriod = !!dayObj.period;
+  const btn = $('#periodToggleBtn');
+  btn.textContent = `Periode heute: ${isPeriod ? 'An' : 'Aus'}`;
+  btn.classList.toggle('period-on', isPeriod);
+  const info = getCyclePhase(selectedDate);
+  $('#cyclePhaseText').textContent = info && info.phase
+    ? `Geschätzte Phase: ${info.phase}${info.dayOfCycle ? ` (Zyklustag ${info.dayOfCycle})` : ''}`
+    : 'Noch keine Periode erfasst, um eine Phase zu schätzen.';
+}
 
 /* =========================================================================
    SVG chart helpers
@@ -454,7 +508,7 @@ function divergingBarChart(container, labels, values, opts) {
 }
 
 /* Line chart for weight: raw points (muted dots + thin line) + 7-day moving average (bold line) */
-function weightLineChart(container, labels, values) {
+function weightLineChart(container, labels, values, cycleFlags) {
   container.innerHTML = '';
   const points = labels.map((k, i) => ({ key: k, i, v: values[i] })).filter((p) => p.v != null);
   if (points.length === 0) { container.innerHTML = `<div class="chart-empty">Noch keine Gewichtsdaten. Trage dein Gewicht ein, um den Verlauf zu sehen.</div>`; return; }
@@ -524,8 +578,25 @@ function weightLineChart(container, labels, values) {
     }
   });
 
+  const legendItems = [{ label: 'Gewicht (Eintrag)', color: 'var(--text-muted)' }, { label: '7-Tage-Trend', color: 'var(--series-1)' }];
+  let hasCycleMarks = false;
+  if (cycleFlags) {
+    const markY = margin.top + plotH + 3;
+    labels.forEach((key, i) => {
+      const flag = cycleFlags[i];
+      if (!flag) return;
+      hasCycleMarks = true;
+      const color = flag === 'period' ? 'var(--diverging-warm)' : 'var(--series-4)';
+      const mark = svgEl('rect', { x: xScale(i) - 3, y: markY, width: 6, height: 6, rx: 1.5, style: `fill:${color}` });
+      mark.addEventListener('mousemove', (e) => showTooltip(e, `<strong>${longLabel(key)}</strong><br>${flag === 'period' ? 'Periode' : 'Lutealphase (geschätzt)'}`));
+      mark.addEventListener('mouseleave', hideTooltip);
+      svg.appendChild(mark);
+    });
+  }
+  if (hasCycleMarks) legendItems.push({ label: 'Periode', color: 'var(--diverging-warm)' }, { label: 'Lutealphase (geschätzt)', color: 'var(--series-4)' });
+
   container.appendChild(svg);
-  container.insertAdjacentHTML('beforeend', legendHtml([{ label: 'Gewicht (Eintrag)', color: 'var(--text-muted)' }, { label: '7-Tage-Trend', color: 'var(--series-1)' }]));
+  container.insertAdjacentHTML('beforeend', legendHtml(legendItems));
 }
 
 /* =========================================================================
@@ -569,7 +640,14 @@ function renderCharts() {
     { label: 'Fett (g)', color: 'var(--series-3)', values: fat },
   ], { unit: ' g' });
 
-  weightLineChart($('#chartWeight'), labels, weight);
+  const cycleFlags = profile.trackCycle ? labels.map((key) => {
+    const info = getCyclePhase(key);
+    if (!info) return null;
+    if (info.isPeriod) return 'period';
+    if (info.phase === 'Lutealphase') return 'luteal';
+    return null;
+  }) : null;
+  weightLineChart($('#chartWeight'), labels, weight, cycleFlags);
 }
 
 /* =========================================================================
@@ -627,7 +705,7 @@ function computeRangeStats(labels) {
     proteinHitRate: proteinHits / n, fiberHitRate: fiberHits / n, belowBMRShare: belowBMR / n,
     weekdayAvgBalance: weekdayCount ? weekdayBalanceSum / weekdayCount : null,
     weekendAvgBalance: weekendCount ? weekendBalanceSum / weekendCount : null,
-    weightDelta, firstWeight, lastWeight, weightEntries: weightKeys.length,
+    weightDelta, firstWeight, lastWeight, weightEntries: weightKeys.length, weightKeysList: weightKeys,
   };
 }
 
@@ -650,9 +728,19 @@ function computeInsights() {
     const actualKg = stats.weightDelta;
     actualLine = `<p>Dein tatsächliches Gewicht hat sich im selben Zeitraum um <strong>${actualKg <= 0 ? '' : '+'}${fmt(actualKg, 1)} kg</strong> verändert (${fmt(stats.firstWeight, 1)} → ${fmt(stats.lastWeight, 1)} kg).</p>`;
     const diff = Math.abs(actualKg - stats.predictedKg);
-    mismatchFlag = diff > 0.6
-      ? `<p><span class="insight-flag warn">Auffällig</span>Die berechnete Bilanz und dein gemessenes Gewicht weichen spürbar voneinander ab (${fmt(diff, 1)} kg Unterschied). Mögliche Gründe: ungenau geschätzte Portionsgrößen, vergessene kleine Snacks/Getränke, Wasser- und Salzhaushalt (besonders bei Zyklus, Stress oder viel Salz/Kohlenhydraten), oder eine falsch eingeschätzte Alltagsaktivität. Das ist normal &mdash; je konsequenter du trackst, desto klarer wird das Bild.</p>`
-      : `<p><span class="insight-flag good">Stimmig</span>Deine berechnete Bilanz und dein gemessenes Gewicht passen gut zusammen &mdash; das Tracking scheint deine Realität aktuell gut abzubilden.</p>`;
+    if (diff > 0.6) {
+      let cycleNote = '';
+      if (profile.trackCycle) {
+        const lastKey = stats.weightKeysList[stats.weightKeysList.length - 1];
+        const info = getCyclePhase(lastKey);
+        if (info && (info.isPeriod || info.phase === 'Lutealphase')) {
+          cycleNote = ` Dein letzter Wiegetag fiel zudem in ${info.isPeriod ? 'deine Periode' : 'die Lutealphase'} &mdash; in dieser Zyklusphase ist Wassereinlagerung häufig und kann 1&ndash;3 kg zusätzliche, vorübergehende Gewichtsschwankung erklären, unabhängig vom Fettabbau.`;
+        }
+      }
+      mismatchFlag = `<p><span class="insight-flag warn">Auffällig</span>Die berechnete Bilanz und dein gemessenes Gewicht weichen spürbar voneinander ab (${fmt(diff, 1)} kg Unterschied). Mögliche Gründe: ungenau geschätzte Portionsgrößen, vergessene kleine Snacks/Getränke, Wasser- und Salzhaushalt (besonders bei Zyklus, Stress oder viel Salz/Kohlenhydraten), oder eine falsch eingeschätzte Alltagsaktivität. Das ist normal &mdash; je konsequenter du trackst, desto klarer wird das Bild.${cycleNote}</p>`;
+    } else {
+      mismatchFlag = `<p><span class="insight-flag good">Stimmig</span>Deine berechnete Bilanz und dein gemessenes Gewicht passen gut zusammen &mdash; das Tracking scheint deine Realität aktuell gut abzubilden.</p>`;
+    }
   } else {
     actualLine = `<p>Trage an mehreren Tagen dein Gewicht ein, um zu sehen, ob deine Kalorienbilanz mit deiner tatsächlichen Gewichtsentwicklung übereinstimmt.</p>`;
   }
@@ -814,6 +902,7 @@ function renderAll() {
   renderActivityList();
   const dayObj = getDay(selectedDate);
   $('#weightInput').value = dayObj.weightKg != null ? dayObj.weightKg : '';
+  renderCycleRow();
   renderCharts();
   computeInsights();
   renderFindings();
@@ -917,6 +1006,13 @@ function wireEvents() {
     renderAll();
   });
 
+  $('#periodToggleBtn').addEventListener('click', () => {
+    togglePeriod(selectedDate);
+    renderCycleRow();
+    renderCharts();
+    computeInsights();
+  });
+
   $('#themeToggle').addEventListener('click', () => {
     const cur = document.documentElement.getAttribute('data-theme');
     const next = cur === 'dark' ? 'light' : 'dark';
@@ -965,6 +1061,9 @@ function wireEvents() {
       fatPerKg: Number($('#pFat').value),
       fiberTarget: Number($('#pFiber').value),
       deficitTarget: Number($('#pDeficit').value),
+      trackCycle: $('#pTrackCycle').checked,
+      cycleLengthDays: Number($('#pCycleLength').value) || 28,
+      periodLengthDays: Number($('#pPeriodLength').value) || 5,
     };
     saveProfile(profile);
     closeSettings();
@@ -1008,6 +1107,9 @@ function openSettings() {
   $('#pFat').value = profile.fatPerKg;
   $('#pFiber').value = profile.fiberTarget;
   $('#pDeficit').value = profile.deficitTarget;
+  $('#pTrackCycle').checked = !!profile.trackCycle;
+  $('#pCycleLength').value = profile.cycleLengthDays;
+  $('#pPeriodLength').value = profile.periodLengthDays;
   $('#settingsModal').hidden = false;
 }
 function closeSettings() { $('#settingsModal').hidden = true; }

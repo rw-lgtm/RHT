@@ -176,6 +176,9 @@ body {
 .inline-form input#foodName { flex: 1; min-width: 160px; }
 .hint { font-size: 0.78rem; color: var(--text-muted); }
 
+.cycle-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.btn.period-on { background: color-mix(in srgb, var(--diverging-warm) 20%, transparent); border-color: var(--diverging-warm); color: var(--diverging-warm); }
+
 details { margin-bottom: 10px; }
 details summary { cursor: pointer; font-size: 0.82rem; color: var(--text-secondary); }
 .manual-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 8px; margin-top: 8px; }
@@ -282,5 +285,7 @@ details summary { cursor: pointer; font-size: 0.82rem; color: var(--text-seconda
   background: var(--page-plane); color: var(--text-primary); font: inherit;
 }
 .modal-hint { grid-column: 1 / -1; margin: 0; }
+.checkbox-label { flex-direction: row !important; align-items: center; gap: 8px !important; font-weight: 600; color: var(--text-primary) !important; }
+.checkbox-label input { width: auto; }
 .modal-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
 @media (max-width: 520px) { .settings-grid { grid-template-columns: 1fr; } }
