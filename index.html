@@ -54,6 +54,7 @@
         <div class="ocr-row">
           <button type="button" id="scanPhotoBtn" class="btn btn-ghost">📷 Nährwerte aus Foto übernehmen</button>
           <input type="file" id="nutritionPhotoInput" accept="image/*" hidden>
+          <button type="button" id="recipeBtn" class="btn btn-ghost">🍲 Rezepte</button>
         </div>
         <p class="hint" id="ocrStatus" hidden></p>
         <details id="foodManualDetails">
@@ -193,6 +194,46 @@
         <div class="modal-actions">
           <button type="button" id="settingsCancel" class="btn btn-ghost">Abbrechen</button>
           <button type="submit" class="btn btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RECIPE MODAL -->
+  <div class="modal-backdrop" id="recipeModal" hidden>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="recipeTitle">
+      <h2 id="recipeTitle">Rezepte</h2>
+      <p class="hint">Lege ein selbstgemachtes Gericht aus Zutaten an &mdash; die Nährwerte werden automatisch pro 100 g/ml berechnet. Danach kannst du das Gericht wie jedes andere Lebensmittel im Hauptformular loggen.</p>
+
+      <ul class="log-list" id="recipeList"></ul>
+
+      <hr>
+      <h3 id="recipeFormTitle">Neues Rezept</h3>
+      <form id="recipeForm">
+        <label class="recipe-name-row">Name
+          <input type="text" id="recipeName" placeholder="z. B. Kürbiscremesuppe" required>
+        </label>
+
+        <div id="recipeIngredients"></div>
+        <button type="button" id="addIngredientBtn" class="btn btn-ghost">+ Zutat hinzufügen</button>
+
+        <div class="recipe-yield-row">
+          <label>Ergibt insgesamt
+            <input type="number" id="recipeYieldAmount" min="1" step="1" placeholder="z. B. 3000" required>
+          </label>
+          <select id="recipeYieldUnit">
+            <option value="ml" selected>ml</option>
+            <option value="g">g</option>
+          </select>
+          <span class="hint">so wie du es später auch loggen willst</span>
+        </div>
+
+        <p class="hint" id="recipePreview"></p>
+
+        <div class="modal-actions">
+          <button type="button" id="recipeCancelEdit" class="btn btn-ghost" hidden>Bearbeitung abbrechen</button>
+          <button type="button" id="recipeModalClose" class="btn btn-ghost">Schließen</button>
+          <button type="submit" class="btn btn-primary">Rezept speichern</button>
         </div>
       </form>
     </div>
