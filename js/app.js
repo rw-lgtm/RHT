@@ -68,6 +68,7 @@ const FOOD_DB = [
   { name: 'Rotwein (trocken)', kcal: 85, protein: 0.1, carbs: 2.6, fat: 0, fiber: 0 },
   { name: 'Bier (Pils)', kcal: 43, protein: 0.5, carbs: 3.2, fat: 0, fiber: 0 },
   { name: 'Sauerteigbrot (Roggen)', kcal: 220, protein: 7, carbs: 42, fat: 1.5, fiber: 6 },
+  { name: 'Iglo Cremespinat', kcal: 65, protein: 2.3, carbs: 3.0, fat: 4.5, fiber: 2.0 },
 ];
 
 const ACTIVITY_MET = {
@@ -147,7 +148,7 @@ function upsertRecipe(recipe) {
 }
 function deleteRecipeById(id) { saveRecipes(loadRecipes().filter((r) => r.id !== id)); }
 
-function getFoodDB() { return FOOD_DB.concat(loadCustomFoods()).concat(loadRecipes()); }
+function getFoodDB() { return loadCustomFoods().concat(loadRecipes()).concat(FOOD_DB); }
 
 /* =========================================================================
    State
