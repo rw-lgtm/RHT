@@ -78,6 +78,10 @@ const FOOD_DB = [
   { name: 'Grieß (Hartweizen)', kcal: 352, protein: 12.7, carbs: 72, fat: 1.1, fiber: 3.9 },
   { name: 'Petersilie (frisch)', kcal: 36, protein: 3.0, carbs: 6.3, fat: 0.8, fiber: 3.3 },
   { name: 'Basilikum (frisch)', kcal: 23, protein: 3.2, carbs: 2.7, fat: 0.6, fiber: 1.6 },
+  { name: 'Feige (frisch)', kcal: 74, protein: 0.8, carbs: 16, fat: 0.3, fiber: 2.9, gramsPerPiece: 50 },
+  { name: 'Himbeere', kcal: 52, protein: 1.2, carbs: 11.9, fat: 0.65, fiber: 6.5 },
+  { name: 'Heidelbeere', kcal: 57, protein: 0.7, carbs: 14.5, fat: 0.3, fiber: 2.4 },
+  { name: 'Champagner', kcal: 80, protein: 0.1, carbs: 1.5, fat: 0, fiber: 0 },
 ];
 
 const ACTIVITY_MET = {
