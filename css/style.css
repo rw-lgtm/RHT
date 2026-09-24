@@ -205,6 +205,9 @@ body {
 .symptom-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .symptom-label { font-size: 0.8rem; color: var(--text-secondary); }
 .chip-group-sm button { padding: 4px 9px; font-size: 0.75rem; }
+
+#baselineGrid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+#baselineGrid .chip-group button { padding: 4px 8px; font-size: 0.7rem; }
 .symptom-row .chip-group { gap: 4px; }
 
 .health-note-label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px; }
@@ -229,6 +232,29 @@ body {
 .health-event-cell {
   color: var(--diverging-warm); text-align: center; font-size: 9px; line-height: 15px;
   background: var(--page-plane) !important; border-color: var(--page-plane);
+}
+
+/* ---------- Doctor report ---------- */
+#baselineDetails, #questionsDetails { margin: 14px 0; }
+.report-hint {
+  background: color-mix(in srgb, var(--status-warning) 15%, transparent);
+  border: 1px solid var(--status-warning); border-radius: 8px; padding: 10px 14px;
+  font-size: 0.85rem; margin: 12px 0 20px;
+}
+.report-meta { color: var(--text-muted); font-size: 0.85rem; margin-top: -8px; }
+.report-table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: 0.82rem; }
+.report-table th, .report-table td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; }
+.report-table th { background: var(--page-plane); }
+.report-list { margin: 8px 0 20px; padding-left: 20px; font-size: 0.85rem; line-height: 1.6; }
+#reportOutput h3 { margin-top: 20px; font-size: 0.95rem; }
+#reportOutput h2 { margin-bottom: 4px; }
+
+@media print {
+  body * { visibility: hidden; }
+  #reportModal, #reportModal * { visibility: visible; }
+  #reportModal { position: absolute; top: 0; left: 0; width: 100%; background: #fff; }
+  #reportModal .modal { box-shadow: none; max-width: 100%; max-height: none; overflow: visible; }
+  .no-print { display: none !important; }
 }
 
 .cycle-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }

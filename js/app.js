@@ -136,6 +136,7 @@ const UMSTAENDE = [
 
 const BLUTUNG_LABELS = { 0: 'Keine', 1: 'Schmier', 2: 'Leicht', 3: 'Mittel', 4: 'Stark' };
 const SCHLAF_LABELS = { 0: 'schlecht', 1: 'mäßig', 2: 'gut', 3: 'sehr gut' };
+const BASELINE_LABELS = { nein: 'nein', manchmal: 'manchmal', oft: 'oft' };
 
 const EVENT_TYPES = [
   { id: 'spirale', label: 'Hormonspirale eingesetzt' },
@@ -148,7 +149,7 @@ const EVENT_TYPES = [
    Storage
    ========================================================================= */
 
-const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1', customFoods: 'nutrifit_customfoods_v1', recipes: 'nutrifit_recipes_v1', healthEvents: 'nutrifit_healthevents_v1' };
+const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1', customFoods: 'nutrifit_customfoods_v1', recipes: 'nutrifit_recipes_v1', healthEvents: 'nutrifit_healthevents_v1', healthBaseline: 'nutrifit_healthbaseline_v1', healthQuestions: 'nutrifit_healthquestions_v1' };
 
 function defaultProfile() {
   return {
@@ -214,6 +215,28 @@ function addHealthEvent(ev) {
   saveHealthEvents(list);
 }
 function removeHealthEvent(id) { saveHealthEvents(loadHealthEvents().filter((e) => e.id !== id)); }
+
+function ensureBaselineShape(b) {
+  if (!b.symptome) b.symptome = {};
+  SYMPTOMS.forEach((s) => { if (b.symptome[s.id] === undefined) b.symptome[s.id] = null; });
+  if (b.zyklusFreitext === undefined) b.zyklusFreitext = '';
+  return b;
+}
+function loadHealthBaseline() {
+  try { return ensureBaselineShape(JSON.parse(localStorage.getItem(STORAGE_KEYS.healthBaseline)) || {}); } catch (e) { return ensureBaselineShape({}); }
+}
+function saveHealthBaseline(b) { localStorage.setItem(STORAGE_KEYS.healthBaseline, JSON.stringify(b)); }
+
+function loadHealthQuestions() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.healthQuestions)) || []; } catch (e) { return []; }
+}
+function saveHealthQuestions(list) { localStorage.setItem(STORAGE_KEYS.healthQuestions, JSON.stringify(list)); }
+function addHealthQuestion(text) {
+  const list = loadHealthQuestions();
+  list.push({ id: uid(), text });
+  saveHealthQuestions(list);
+}
+function removeHealthQuestion(id) { saveHealthQuestions(loadHealthQuestions().filter((q) => q.id !== id)); }
 
 /* =========================================================================
    State
@@ -637,6 +660,195 @@ function renderHealthGrid() {
       ${fitnessRowHtml}
     </tbody>`;
 }
+
+/* =========================================================================
+   Doctor report (Arztbericht)
+   ========================================================================= */
+
+let reportRangeDays = 30;
+
+function setupBaselineGrid() {
+  $('#baselineGrid').innerHTML = SYMPTOMS.map((s) => `
+    <div class="symptom-row" data-baseline-symptom="${s.id}">
+      <span class="symptom-label" title="${escapeHtml(s.full)}">${escapeHtml(s.short)}</span>
+      <div class="chip-group">
+        <button type="button" data-val="nein">nein</button>
+        <button type="button" data-val="manchmal">manchmal</button>
+        <button type="button" data-val="oft">oft</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderBaselineGrid() {
+  const b = loadHealthBaseline();
+  $$('#baselineGrid [data-baseline-symptom]').forEach((row) => {
+    const id = row.dataset.baselineSymptom;
+    row.querySelectorAll('button').forEach((btn) => btn.classList.toggle('active', btn.dataset.val === b.symptome[id]));
+  });
+  $('#baselineZyklusFreitext').value = b.zyklusFreitext || '';
+}
+
+function renderQuestionList() {
+  const questions = loadHealthQuestions();
+  const list = $('#questionList');
+  if (!questions.length) { list.innerHTML = `<li class="log-empty">Noch keine Fragen erfasst.</li>`; return; }
+  list.innerHTML = questions.map((q) => `
+    <li>
+      <div class="log-item-main"><div class="log-item-name">${escapeHtml(q.text)}</div></div>
+      <button class="log-item-remove" data-remove-question="${q.id}" aria-label="Eintrag löschen" title="Löschen">✕</button>
+    </li>`).join('');
+}
+
+function computeDoctorReport(rangeDays) {
+  const labels = buildRangeLabels(rangeDays, selectedDate);
+  const baseline = loadHealthBaseline();
+
+  const symptomStats = SYMPTOMS.map((s) => {
+    let entered = 0, notable = 0, sum = 0;
+    labels.forEach((k) => {
+      const h = days[k] && days[k].health;
+      const val = h ? h.symptome[s.id] : null;
+      if (val != null) { entered++; sum += val; if (val >= 2) notable++; }
+    });
+    return { id: s.id, full: s.full, entered, notable, avg: entered ? sum / entered : null, baseline: baseline.symptome[s.id] };
+  });
+  const top3 = symptomStats.filter((s) => s.avg != null).slice()
+    .sort((a, b) => (b.avg - a.avg) || (b.notable - a.notable)).slice(0, 3);
+
+  const bleedingDays = labels.filter((k) => isBleedingDay(k)).sort();
+  const episodes = [];
+  let cur = null;
+  bleedingDays.forEach((k) => {
+    if (cur && addDays(cur.end, 1) === k) cur.end = k;
+    else { if (cur) episodes.push(cur); cur = { start: k, end: k }; }
+  });
+  if (cur) episodes.push(cur);
+  episodes.forEach((ep, i) => {
+    ep.durationDays = Math.round((keyToDate(ep.end) - keyToDate(ep.start)) / 86400000) + 1;
+    ep.gapFromPrev = i > 0 ? Math.round((keyToDate(ep.start) - keyToDate(episodes[i - 1].start)) / 86400000) : null;
+  });
+
+  let hwDaysEntered = 0, hwTotal = 0;
+  labels.forEach((k) => {
+    const h = days[k] && days[k].health;
+    if (h && h.hitzewallungenAnzahl != null) { hwDaysEntered++; hwTotal += h.hitzewallungenAnzahl; }
+  });
+
+  const umstaendeStats = UMSTAENDE.map((u) => ({
+    label: u.short,
+    count: labels.filter((k) => days[k] && days[k].health && days[k].health.umstaende[u.id]).length,
+  }));
+
+  const notes = labels
+    .map((k) => ({ date: k, text: days[k] && days[k].health ? days[k].health.notiz : '' }))
+    .filter((n) => n.text && n.text.trim());
+
+  const minutesByDay = labels.map((k) => (days[k] && days[k].activities ? days[k].activities.reduce((s, a) => s + (a.minutes || 0), 0) : 0));
+  const daysWithActivity = minutesByDay.filter((m) => m > 0).length;
+  const totalActivityMinutes = minutesByDay.reduce((s, m) => s + m, 0);
+  const schlafValues = labels.map((k) => (days[k] && days[k].health ? days[k].health.schlaf : null)).filter((v) => v != null);
+  const avgSchlaf = schlafValues.length ? schlafValues.reduce((s, v) => s + v, 0) / schlafValues.length : null;
+
+  const loggedDays = labels.filter((k) => days[k] && days[k].health && (
+    days[k].health.blutung != null || Object.values(days[k].health.symptome).some((v) => v != null)
+  )).length;
+
+  return {
+    rangeDays, startDate: labels[0], endDate: labels[labels.length - 1], totalDays: labels.length, loggedDays,
+    symptomStats, top3, episodes, hwDaysEntered, hwTotal, hwAvg: hwDaysEntered ? hwTotal / hwDaysEntered : null,
+    umstaendeStats, notes,
+    fitness: { daysWithActivity, totalActivityMinutes, avgSchlaf, schlafCount: schlafValues.length },
+  };
+}
+
+function renderDoctorReport() {
+  const r = computeDoctorReport(reportRangeDays);
+
+  const top3Html = r.top3.length
+    ? `<ol>${r.top3.map((s) => `<li>${escapeHtml(s.full)} (Ø ${s.avg.toFixed(1)}, ${s.notable} Tage deutlich/stark)</li>`).join('')}</ol>`
+    : `<p>Noch nicht genug Daten im Zeitraum.</p>`;
+
+  const symptomTableRows = r.symptomStats.map((s) => `
+    <tr>
+      <td>${escapeHtml(s.full)}</td>
+      <td>${s.entered}</td>
+      <td>${s.notable}</td>
+      <td>${s.avg != null ? s.avg.toFixed(1) : '–'}</td>
+      <td>${s.baseline ? BASELINE_LABELS[s.baseline] : '–'}</td>
+    </tr>`).join('');
+
+  const episodesHtml = r.episodes.length
+    ? `<table class="report-table"><thead><tr><th>Start</th><th>Ende</th><th>Dauer</th><th>Abstand zur vorherigen</th></tr></thead><tbody>
+        ${r.episodes.map((ep) => `<tr><td>${longLabel(ep.start)}</td><td>${longLabel(ep.end)}</td><td>${ep.durationDays} Tage</td><td>${ep.gapFromPrev != null ? ep.gapFromPrev + ' Tage' : '–'}</td></tr>`).join('')}
+      </tbody></table>`
+    : `<p>Keine Blutungstage im Zeitraum erfasst.</p>`;
+
+  const umstaendeHtml = `<ul class="report-list">${r.umstaendeStats.map((u) => `<li>${escapeHtml(u.label)}: ${u.count} Tage</li>`).join('')}</ul>`;
+
+  const notesHtml = r.notes.length
+    ? `<ul class="report-list">${r.notes.map((n) => `<li><strong>${longLabel(n.date)}:</strong> ${escapeHtml(n.text)}</li>`).join('')}</ul>`
+    : `<p>Keine Notizen im Zeitraum.</p>`;
+
+  const questions = loadHealthQuestions();
+  const questionsHtml = questions.length
+    ? `<ul class="report-list">${questions.map((q) => `<li>${escapeHtml(q.text)}</li>`).join('')}</ul>`
+    : `<p>Keine Fragen hinterlegt.</p>`;
+
+  const baseline = loadHealthBaseline();
+  const baselineFreitextHtml = baseline.zyklusFreitext
+    ? `<p><strong>Zyklus vor der Spirale:</strong> ${escapeHtml(baseline.zyklusFreitext)}</p>` : '';
+
+  const fitnessHtml = (r.fitness.daysWithActivity > 0 || r.fitness.schlafCount > 0)
+    ? `<div class="report-section">
+        <h3>Fitness (optional)</h3>
+        ${r.fitness.daysWithActivity ? `<p>Bewegung an ${r.fitness.daysWithActivity} von ${r.totalDays} Tagen, insgesamt ${r.fitness.totalActivityMinutes} Minuten.</p>` : ''}
+        ${r.fitness.schlafCount ? `<p>Schlafqualität im Schnitt: ${SCHLAF_LABELS[Math.round(r.fitness.avgSchlaf)]} (${r.fitness.schlafCount} Tage erfasst).</p>` : ''}
+      </div>`
+    : '';
+
+  $('#reportOutput').innerHTML = `
+    <h2>Arzt-Zusammenfassung</h2>
+    <p class="report-meta">Zeitraum: ${longLabel(r.startDate)} &ndash; ${longLabel(r.endDate)} (${r.rangeDays} Tage, davon ${r.loggedDays} mit Einträgen)</p>
+
+    <div class="report-hint">Hinweis: Eine Hormonspirale kann in den ersten Monaten das Blutungsmuster verändern. Duloxetin kann Schwitzen, Schlaf, Stimmung und Libido beeinflussen.</div>
+
+    ${baselineFreitextHtml}
+
+    <h3>Top 3 Beschwerden</h3>
+    ${top3Html}
+
+    <h3>Symptome</h3>
+    <table class="report-table">
+      <thead><tr><th>Symptom</th><th>Tage erfasst</th><th>Tage deutlich/stark</th><th>Ø</th><th>Baseline</th></tr></thead>
+      <tbody>${symptomTableRows}</tbody>
+    </table>
+
+    <h3>Blutungsphasen</h3>
+    ${episodesHtml}
+
+    <h3>Hitzewallungen</h3>
+    <p>${r.hwDaysEntered ? `Insgesamt ${r.hwTotal}, im Schnitt ${r.hwAvg.toFixed(1)} pro Tag (${r.hwDaysEntered} Tage erfasst).` : 'Keine Angaben im Zeitraum.'}</p>
+
+    <h3>Einflussfaktoren</h3>
+    ${umstaendeHtml}
+
+    <h3>Notizen</h3>
+    ${notesHtml}
+
+    <h3>Fragen an die Ärztin</h3>
+    ${questionsHtml}
+
+    ${fitnessHtml}
+  `;
+}
+
+function openDoctorReport() {
+  renderBaselineGrid();
+  renderQuestionList();
+  renderDoctorReport();
+  $('#reportModal').hidden = false;
+}
+function closeDoctorReport() { $('#reportModal').hidden = true; }
 
 /* =========================================================================
    Rendering: food & activity logs
@@ -1459,6 +1671,7 @@ function setupStaticLists() {
   $('#foodList').innerHTML = getFoodDB().map((f) => `<option value="${escapeHtml(f.name)}">`).join('');
   $('#activityType').innerHTML = Object.keys(ACTIVITY_MET).map((k) => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
   setupHealthGrid();
+  setupBaselineGrid();
 }
 
 /* =========================================================================
@@ -1703,6 +1916,56 @@ function wireEvents() {
     renderHealthGrid();
   });
 
+  $('#doctorReportBtn').addEventListener('click', openDoctorReport);
+  $('#reportModalClose').addEventListener('click', closeDoctorReport);
+  $('#reportModal').addEventListener('click', (e) => { if (e.target === $('#reportModal')) closeDoctorReport(); });
+  $('#reportPrintBtn').addEventListener('click', () => window.print());
+
+  $('#reportRangeToggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-range]');
+    if (!btn) return;
+    reportRangeDays = Number(btn.dataset.range);
+    $$('#reportRangeToggle button').forEach((b) => b.classList.toggle('active', b === btn));
+    renderDoctorReport();
+  });
+
+  $('#baselineGrid').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const row = btn.closest('[data-baseline-symptom]');
+    if (!row) return;
+    const id = row.dataset.baselineSymptom;
+    const val = btn.dataset.val;
+    const b = loadHealthBaseline();
+    b.symptome[id] = b.symptome[id] === val ? null : val;
+    saveHealthBaseline(b);
+    renderBaselineGrid();
+    renderDoctorReport();
+  });
+  $('#baselineZyklusFreitext').addEventListener('input', (e) => {
+    const b = loadHealthBaseline();
+    b.zyklusFreitext = e.target.value;
+    saveHealthBaseline(b);
+  });
+  $('#baselineZyklusFreitext').addEventListener('change', () => renderDoctorReport());
+
+  $('#questionForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = $('#questionText').value.trim();
+    if (!text) return;
+    addHealthQuestion(text);
+    e.target.reset();
+    renderQuestionList();
+    renderDoctorReport();
+  });
+  $('#questionList').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-remove-question]');
+    if (!btn) return;
+    removeHealthQuestion(btn.dataset.removeQuestion);
+    renderQuestionList();
+    renderDoctorReport();
+  });
+
   $('#themeToggle').addEventListener('click', () => {
     const cur = document.documentElement.getAttribute('data-theme');
     const next = cur === 'dark' ? 'light' : 'dark';
@@ -1763,7 +2026,7 @@ function wireEvents() {
   });
 
   $('#exportBtn').addEventListener('click', () => {
-    const data = { profile, days, customFoods: loadCustomFoods(), focusTips: loadFocusTips(), recipes: loadRecipes(), healthEvents: loadHealthEvents() };
+    const data = { profile, days, customFoods: loadCustomFoods(), focusTips: loadFocusTips(), recipes: loadRecipes(), healthEvents: loadHealthEvents(), healthBaseline: loadHealthBaseline(), healthQuestions: loadHealthQuestions() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1784,6 +2047,8 @@ function wireEvents() {
         if (data.focusTips) saveFocusTips(data.focusTips);
         if (data.recipes) saveRecipes(data.recipes);
         if (data.healthEvents) saveHealthEvents(data.healthEvents);
+        if (data.healthBaseline) saveHealthBaseline(ensureBaselineShape(data.healthBaseline));
+        if (data.healthQuestions) saveHealthQuestions(data.healthQuestions);
         setupStaticLists();
         renderAll();
         alert('Daten erfolgreich importiert.');
