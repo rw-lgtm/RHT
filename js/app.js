@@ -71,6 +71,13 @@ const FOOD_DB = [
   { name: 'Iglo Cremespinat', kcal: 65, protein: 2.3, carbs: 3.0, fat: 4.5, fiber: 2.0 },
   { name: 'Bio Frankfurter Würstchen', kcal: 260, protein: 11, carbs: 1.5, fat: 24, fiber: 0, gramsPerPiece: 50 },
   { name: 'Dinkelbrot (hell)', kcal: 245, protein: 8, carbs: 47, fat: 1.8, fiber: 3.5 },
+  { name: 'Cannellini Bohnen (abgetropft)', kcal: 93, protein: 6.4, carbs: 13, fat: 0.4, fiber: 5.9 },
+  { name: 'Schwarzkohl (roh)', kcal: 49, protein: 4.3, carbs: 5.4, fat: 0.9, fiber: 4.0 },
+  { name: 'Pecorino', kcal: 390, protein: 28, carbs: 1, fat: 30, fiber: 0 },
+  { name: 'Stangensellerie (roh)', kcal: 16, protein: 0.7, carbs: 3.0, fat: 0.2, fiber: 1.6, gramsPerPiece: 40 },
+  { name: 'Grieß (Hartweizen)', kcal: 352, protein: 12.7, carbs: 72, fat: 1.1, fiber: 3.9 },
+  { name: 'Petersilie (frisch)', kcal: 36, protein: 3.0, carbs: 6.3, fat: 0.8, fiber: 3.3 },
+  { name: 'Basilikum (frisch)', kcal: 23, protein: 3.2, carbs: 2.7, fat: 0.6, fiber: 1.6 },
 ];
 
 const ACTIVITY_MET = {
