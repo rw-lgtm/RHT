@@ -70,6 +70,7 @@ const FOOD_DB = [
   { name: 'Sauerteigbrot (Roggen)', kcal: 220, protein: 7, carbs: 42, fat: 1.5, fiber: 6 },
   { name: 'Iglo Cremespinat', kcal: 65, protein: 2.3, carbs: 3.0, fat: 4.5, fiber: 2.0 },
   { name: 'Bio Frankfurter Würstchen', kcal: 260, protein: 11, carbs: 1.5, fat: 24, fiber: 0, gramsPerPiece: 50 },
+  { name: 'Dinkelbrot (hell)', kcal: 245, protein: 8, carbs: 47, fat: 1.8, fiber: 3.5 },
 ];
 
 const ACTIVITY_MET = {
