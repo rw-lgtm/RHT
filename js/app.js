@@ -105,6 +105,7 @@ function defaultProfile() {
     activityFactor: 1.2, proteinPerKg: 1.8, fatPerKg: 0.8,
     fiberTarget: 30, deficitTarget: 500,
     trackCycle: false, cycleLengthDays: 28, periodLengthDays: 5,
+    mlPerKgWater: 30, mlPerActiveMinuteWater: 10,
   };
 }
 
@@ -190,10 +191,13 @@ function longLabel(key) {
    ========================================================================= */
 
 function getDay(key) {
-  return days[key] || { weightKg: null, food: [], activities: [] };
+  const day = days[key] || { weightKg: null, food: [], activities: [] };
+  if (!day.water) day.water = [];
+  return day;
 }
 function ensureDay(key) {
   if (!days[key]) days[key] = { weightKg: null, food: [], activities: [] };
+  if (!days[key].water) days[key].water = [];
   return days[key];
 }
 function uid() { return Math.random().toString(36).slice(2, 10); }
@@ -221,6 +225,17 @@ function removeActivityEntry(key, id) {
 function setWeight(key, kg) {
   const day = ensureDay(key);
   day.weightKg = kg;
+  saveDays(days);
+}
+
+function addWaterEntry(key, ml) {
+  const day = ensureDay(key);
+  day.water.push({ id: uid(), ml });
+  saveDays(days);
+}
+function removeWaterEntry(key, id) {
+  const day = ensureDay(key);
+  day.water = day.water.filter((w) => w.id !== id);
   saveDays(days);
 }
 
@@ -304,6 +319,10 @@ function calcTargets(p, weightKg, activityKcalToday) {
   return { bmr, baseline, kcalTarget, proteinTarget, carbsTarget, fatTarget, fiberTarget: p.fiberTarget };
 }
 
+function calcWaterTarget(p, weightKg, activityMinutesToday) {
+  return weightKg * p.mlPerKgWater + activityMinutesToday * p.mlPerActiveMinuteWater;
+}
+
 /* =========================================================================
    Rendering: stat tiles + macro bars
    ========================================================================= */
@@ -364,6 +383,30 @@ function renderMacroBars() {
         <span class="macro-value">${fmt(r.value, 1)} / ${fmt(r.target, 0)} g</span>
       </div>`;
   }).join('');
+}
+
+function renderWaterCard() {
+  const dayObj = getDay(selectedDate);
+  const weightKg = getLatestWeightUpTo(selectedDate);
+  const activityMinutes = dayObj.activities.reduce((s, a) => s + (a.minutes || 0), 0);
+  const target = calcWaterTarget(profile, weightKg, activityMinutes);
+  const consumed = dayObj.water.reduce((s, w) => s + w.ml, 0);
+  const pct = target > 0 ? Math.min(100, (consumed / target) * 100) : 0;
+
+  $('#waterBar').innerHTML = `
+    <div class="macro-row">
+      <span class="macro-label">Wasser</span>
+      <span class="macro-track"><span class="macro-fill" style="width:${pct}%;background:var(--series-1)"></span></span>
+      <span class="macro-value">${fmt(consumed)} / ${fmt(target)} ml</span>
+    </div>`;
+
+  const list = $('#waterLogList');
+  if (!dayObj.water.length) { list.innerHTML = `<li class="log-empty">Noch kein Wasser erfasst heute.</li>`; return; }
+  list.innerHTML = dayObj.water.map((w) => `
+    <li>
+      <div class="log-item-main"><div class="log-item-name">${fmt(w.ml)} ml</div></div>
+      <button class="log-item-remove" data-remove-water="${w.id}" aria-label="Eintrag löschen" title="Löschen">✕</button>
+    </li>`).join('');
 }
 
 /* =========================================================================
@@ -954,6 +997,7 @@ function renderAll() {
   $('#dayPicker').value = selectedDate;
   renderStatTiles();
   renderMacroBars();
+  renderWaterCard();
   renderFoodList();
   renderActivityList();
   const dayObj = getDay(selectedDate);
@@ -1334,6 +1378,26 @@ function wireEvents() {
     renderAll();
   });
 
+  $('#waterForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ml = Number($('#waterAmount').value) || 0;
+    if (ml > 0) addWaterEntry(selectedDate, ml);
+    e.target.reset(); $('#waterAmount').value = 250;
+    renderWaterCard();
+  });
+  $('.quick-water-row').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-quick-water]');
+    if (!btn) return;
+    addWaterEntry(selectedDate, Number(btn.dataset.quickWater));
+    renderWaterCard();
+  });
+  $('#waterLogList').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-remove-water]');
+    if (!btn) return;
+    removeWaterEntry(selectedDate, btn.dataset.removeWater);
+    renderWaterCard();
+  });
+
   $('#periodToggleBtn').addEventListener('click', () => {
     togglePeriod(selectedDate);
     renderCycleRow();
@@ -1392,6 +1456,8 @@ function wireEvents() {
       trackCycle: $('#pTrackCycle').checked,
       cycleLengthDays: Number($('#pCycleLength').value) || 28,
       periodLengthDays: Number($('#pPeriodLength').value) || 5,
+      mlPerKgWater: Number($('#pWaterPerKg').value) || 30,
+      mlPerActiveMinuteWater: Number($('#pWaterPerActiveMin').value) || 10,
     };
     saveProfile(profile);
     closeSettings();
@@ -1442,6 +1508,8 @@ function openSettings() {
   $('#pTrackCycle').checked = !!profile.trackCycle;
   $('#pCycleLength').value = profile.cycleLengthDays;
   $('#pPeriodLength').value = profile.periodLengthDays;
+  $('#pWaterPerKg').value = profile.mlPerKgWater;
+  $('#pWaterPerActiveMin').value = profile.mlPerActiveMinuteWater;
   $('#settingsModal').hidden = false;
 }
 function closeSettings() { $('#settingsModal').hidden = true; }

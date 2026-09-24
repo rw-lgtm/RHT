@@ -156,11 +156,11 @@ body {
 .tile-value.warn { color: var(--status-critical); }
 
 .macro-bars { display: grid; gap: 10px; }
-.macro-row { display: grid; grid-template-columns: 110px 1fr 90px; align-items: center; gap: 10px; font-size: 0.85rem; }
+.macro-row { display: grid; grid-template-columns: 110px 1fr minmax(90px, auto); align-items: center; gap: 10px; font-size: 0.85rem; }
 .macro-track { height: 10px; border-radius: 5px; background: var(--gridline); overflow: hidden; }
 .macro-fill { height: 100%; border-radius: 5px; }
 .macro-label { color: var(--text-secondary); }
-.macro-value { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.macro-value { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap; }
 
 /* ---------- Forms ---------- */
 .inline-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
@@ -175,6 +175,9 @@ body {
 .inline-form input[type="number"] { width: 110px; }
 .inline-form input#foodName { flex: 1; min-width: 160px; }
 .hint { font-size: 0.78rem; color: var(--text-muted); }
+
+.quick-water-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.quick-water-row .btn { padding: 6px 12px; font-size: 0.85rem; }
 
 .cycle-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 .btn.period-on { background: color-mix(in srgb, var(--diverging-warm) 20%, transparent); border-color: var(--diverging-warm); color: var(--diverging-warm); }
