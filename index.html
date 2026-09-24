@@ -120,6 +120,72 @@
       <ul class="log-list" id="waterLogList"></ul>
     </section>
 
+    <!-- HEALTH / CYCLE -->
+    <section class="card" id="healthCard">
+      <h2>Gesundheit</h2>
+      <p class="hint">Für den Termin bei deiner Gynäkologin &mdash; unter einer Minute pro Tag. Nachtragen jederzeit über die Datumsauswahl oben.</p>
+
+      <div class="health-row">
+        <span class="health-row-label">Blutung</span>
+        <div class="chip-group" id="blutungGroup" data-field="blutung">
+          <button type="button" data-val="0">Keine</button>
+          <button type="button" data-val="1">Schmier</button>
+          <button type="button" data-val="2">Leicht</button>
+          <button type="button" data-val="3">Mittel</button>
+          <button type="button" data-val="4">Stark</button>
+        </div>
+      </div>
+      <p class="hint" id="healthCyclePhaseText"></p>
+
+      <div class="health-symptom-grid" id="symptomGrid"></div>
+
+      <div class="health-row">
+        <span class="health-row-label">Wallungen, Anzahl</span>
+        <input type="number" id="hitzewallungenAnzahl" min="0" max="50" placeholder="0">
+      </div>
+
+      <h3>Zykluszeichen</h3>
+      <div class="health-row">
+        <span class="health-row-label">Zervixschleim</span>
+        <select id="zervixschleim">
+          <option value="">&ndash;</option>
+          <option value="keine">keine</option>
+          <option value="waessrig">wässrig</option>
+          <option value="cremig">cremig</option>
+          <option value="spinnbar">spinnbar (eiweißartig)</option>
+        </select>
+      </div>
+      <div class="chip-group" id="zyklusZeichenToggles">
+        <button type="button" data-field="mittelschmerz">Mittelschmerz</button>
+        <button type="button" data-field="kraempfe">Krämpfe</button>
+      </div>
+
+      <h3>Umstände</h3>
+      <div class="chip-group" id="umstaendeGroup"></div>
+
+      <div class="health-row">
+        <span class="health-row-label">Schlaf</span>
+        <div class="chip-group" id="schlafGroup" data-field="schlaf">
+          <button type="button" data-val="0">schlecht</button>
+          <button type="button" data-val="1">mäßig</button>
+          <button type="button" data-val="2">gut</button>
+          <button type="button" data-val="3">sehr gut</button>
+        </div>
+      </div>
+
+      <div class="health-row">
+        <span class="health-row-label">Duloxetin genommen</span>
+        <div class="chip-group" id="duloxetinGroup" data-field="duloxetin">
+          <button type="button" data-val="true">Ja</button>
+          <button type="button" data-val="false">Nein</button>
+        </div>
+      </div>
+
+      <label class="health-note-label">Notiz
+        <textarea id="healthNotiz" rows="2" placeholder="Kurze Notiz zum Tag …"></textarea>
+      </label>
+    </section>
+
     <!-- TRENDS -->
     <section class="card">
       <div class="card-header-row">

@@ -101,6 +101,43 @@ const KCAL_PER_KG_FAT = 7700;
 const UNIT_LABELS = { g: 'g', ml: 'ml', stk: 'Stück' };
 
 /* =========================================================================
+   Health/cycle tracking: symptoms (angelehnt an die Menopause Rating Scale)
+   ========================================================================= */
+
+const SYMPTOMS = [
+  { id: 'hitzewallungen', short: 'Wallungen', full: 'Hitzewallungen' },
+  { id: 'nachtschweiss', short: 'Nachtschw.', full: 'Nachtschweiß' },
+  { id: 'schwitzenAllg', short: 'Schwitzen', full: 'Schwitzen allgemein' },
+  { id: 'schlafprobleme', short: 'Schlafprobl.', full: 'Schlafprobleme' },
+  { id: 'erschoepfung', short: 'Erschöpfung', full: 'Erschöpfung' },
+  { id: 'herzklopfen', short: 'Herzklopfen', full: 'Herzklopfen' },
+  { id: 'reizbarkeit', short: 'Reizbarkeit', full: 'Reizbarkeit' },
+  { id: 'niedergeschlagenheit', short: 'Niederg.', full: 'Niedergeschlagenheit' },
+  { id: 'aengstlichkeit', short: 'Ängstlichk.', full: 'Ängstlichkeit' },
+  { id: 'konzentration', short: 'Konzentr.', full: 'Konzentrationsprobleme' },
+  { id: 'kopfschmerzen', short: 'Kopfschm.', full: 'Kopfschmerzen' },
+  { id: 'brustspannen', short: 'Brustspannen', full: 'Brustspannen' },
+  { id: 'gelenkschmerzen', short: 'Gelenk/Muskel', full: 'Gelenk-/Muskelschmerzen' },
+  { id: 'blaehbauch', short: 'Blähbauch', full: 'Blähbauch' },
+  { id: 'libido', short: 'Libido', full: 'Verminderte Libido' },
+  { id: 'scheidentrockenheit', short: 'Trockenheit', full: 'Scheidentrockenheit' },
+  { id: 'blasenbeschwerden', short: 'Blase', full: 'Blasenbeschwerden' },
+];
+
+const UMSTAENDE = [
+  { id: 'stress', short: 'Stress', full: 'Stress' },
+  { id: 'alkohol', short: 'Alkohol', full: 'Alkohol' },
+  { id: 'koffeinNachmittag', short: 'Koffein nachm.', full: 'Koffein nachmittags' },
+  { id: 'sport', short: 'Sport', full: 'Sport' },
+  { id: 'krank', short: 'Krank', full: 'Krank' },
+  { id: 'reise', short: 'Reise', full: 'Reise' },
+  { id: 'schlechtGeschlafenAnders', short: 'Schlecht geschlafen', full: 'Schlecht geschlafen (anderer Grund)' },
+];
+
+const BLUTUNG_LABELS = { 0: 'Keine', 1: 'Schmier', 2: 'Leicht', 3: 'Mittel', 4: 'Stark' };
+const SCHLAF_LABELS = { 0: 'schlecht', 1: 'mäßig', 2: 'gut', 3: 'sehr gut' };
+
+/* =========================================================================
    Storage
    ========================================================================= */
 
@@ -197,15 +234,42 @@ function longLabel(key) {
    Day data access
    ========================================================================= */
 
+function ensureHealthShape(day) {
+  if (!day.health) day.health = {};
+  const h = day.health;
+  if (h.blutung === undefined) h.blutung = null;
+  if (!h.symptome) h.symptome = {};
+  SYMPTOMS.forEach((s) => { if (h.symptome[s.id] === undefined) h.symptome[s.id] = null; });
+  if (h.hitzewallungenAnzahl === undefined) h.hitzewallungenAnzahl = null;
+  if (!h.zyklusZeichen) h.zyklusZeichen = {};
+  if (h.zyklusZeichen.zervixschleim === undefined) h.zyklusZeichen.zervixschleim = null;
+  if (h.zyklusZeichen.mittelschmerz === undefined) h.zyklusZeichen.mittelschmerz = false;
+  if (h.zyklusZeichen.kraempfe === undefined) h.zyklusZeichen.kraempfe = false;
+  if (!h.umstaende) h.umstaende = {};
+  UMSTAENDE.forEach((u) => { if (h.umstaende[u.id] === undefined) h.umstaende[u.id] = false; });
+  if (h.duloxetin === undefined) h.duloxetin = null;
+  if (h.schlaf === undefined) h.schlaf = null;
+  if (h.notiz === undefined) h.notiz = '';
+  return h;
+}
+
 function getDay(key) {
   const day = days[key] || { weightKg: null, food: [], activities: [] };
   if (!day.water) day.water = [];
+  ensureHealthShape(day);
   return day;
 }
 function ensureDay(key) {
   if (!days[key]) days[key] = { weightKg: null, food: [], activities: [] };
   if (!days[key].water) days[key].water = [];
+  ensureHealthShape(days[key]);
   return days[key];
+}
+
+function updateHealth(key, patchFn) {
+  const day = ensureDay(key);
+  patchFn(day.health);
+  saveDays(days);
 }
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
@@ -264,8 +328,14 @@ function togglePeriod(key) {
   saveDays(days);
 }
 
+function isBleedingDay(key) {
+  const day = days[key];
+  if (!day) return false;
+  return !!day.period || (day.health && day.health.blutung != null && day.health.blutung >= 1);
+}
+
 function findPeriodStarts() {
-  const marked = Object.keys(days).filter((k) => days[k] && days[k].period).sort();
+  const marked = Object.keys(days).filter((k) => isBleedingDay(k)).sort();
   const starts = [];
   let prev = null;
   marked.forEach((k) => {
@@ -277,7 +347,7 @@ function findPeriodStarts() {
 
 function getCyclePhase(key) {
   if (!profile.trackCycle) return null;
-  const isPeriod = !!(days[key] && days[key].period);
+  const isPeriod = isBleedingDay(key);
   const starts = findPeriodStarts().filter((s) => s <= key);
   if (!starts.length) return { isPeriod, phase: isPeriod ? 'Periode' : null, dayOfCycle: null };
   const lastStart = starts[starts.length - 1];
@@ -414,6 +484,50 @@ function renderWaterCard() {
       <div class="log-item-main"><div class="log-item-name">${fmt(w.ml)} ml</div></div>
       <button class="log-item-remove" data-remove-water="${w.id}" aria-label="Eintrag löschen" title="Löschen">✕</button>
     </li>`).join('');
+}
+
+function setupHealthGrid() {
+  $('#symptomGrid').innerHTML = SYMPTOMS.map((s) => `
+    <div class="symptom-row" data-symptom="${s.id}">
+      <span class="symptom-label" title="${escapeHtml(s.full)}">${escapeHtml(s.short)}</span>
+      <div class="chip-group chip-group-sm">
+        <button type="button" data-val="0">0</button>
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+      </div>
+    </div>`).join('');
+  $('#umstaendeGroup').innerHTML = UMSTAENDE.map((u) => `<button type="button" data-umstand="${u.id}" title="${escapeHtml(u.full)}">${escapeHtml(u.short)}</button>`).join('');
+}
+
+function renderHealthCard() {
+  const day = getDay(selectedDate);
+  const h = day.health;
+
+  $$('#blutungGroup button').forEach((b) => b.classList.toggle('active', Number(b.dataset.val) === h.blutung));
+
+  $$('#symptomGrid .symptom-row').forEach((row) => {
+    const id = row.dataset.symptom;
+    row.querySelectorAll('button').forEach((b) => b.classList.toggle('active', Number(b.dataset.val) === h.symptome[id]));
+  });
+
+  $('#hitzewallungenAnzahl').value = h.hitzewallungenAnzahl != null ? h.hitzewallungenAnzahl : '';
+
+  $('#zervixschleim').value = h.zyklusZeichen.zervixschleim || '';
+  $$('#zyklusZeichenToggles button').forEach((b) => b.classList.toggle('active', !!h.zyklusZeichen[b.dataset.field]));
+
+  $$('#umstaendeGroup button').forEach((b) => b.classList.toggle('active', !!h.umstaende[b.dataset.umstand]));
+
+  $$('#schlafGroup button').forEach((b) => b.classList.toggle('active', Number(b.dataset.val) === h.schlaf));
+
+  $$('#duloxetinGroup button').forEach((b) => b.classList.toggle('active', h.duloxetin === (b.dataset.val === 'true')));
+
+  $('#healthNotiz').value = h.notiz || '';
+
+  const info = getCyclePhase(selectedDate);
+  $('#healthCyclePhaseText').textContent = info && info.phase
+    ? `Geschätzte Phase: ${info.phase}${info.dayOfCycle ? ` (Zyklustag ${info.dayOfCycle})` : ''}`
+    : '';
 }
 
 /* =========================================================================
@@ -1005,6 +1119,7 @@ function renderAll() {
   renderStatTiles();
   renderMacroBars();
   renderWaterCard();
+  renderHealthCard();
   renderFoodList();
   renderActivityList();
   const dayObj = getDay(selectedDate);
@@ -1233,6 +1348,7 @@ function editRecipe(id) {
 function setupStaticLists() {
   $('#foodList').innerHTML = getFoodDB().map((f) => `<option value="${escapeHtml(f.name)}">`).join('');
   $('#activityType').innerHTML = Object.keys(ACTIVITY_MET).map((k) => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
+  setupHealthGrid();
 }
 
 /* =========================================================================
@@ -1410,6 +1526,54 @@ function wireEvents() {
     renderCycleRow();
     renderCharts();
     computeInsights();
+  });
+
+  $('#healthCard').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+
+    const symptomRow = btn.closest('[data-symptom]');
+    if (symptomRow) {
+      const id = symptomRow.dataset.symptom;
+      const val = Number(btn.dataset.val);
+      updateHealth(selectedDate, (h) => { h.symptome[id] = h.symptome[id] === val ? null : val; });
+      renderHealthCard();
+      return;
+    }
+    if (btn.closest('#umstaendeGroup')) {
+      const id = btn.dataset.umstand;
+      updateHealth(selectedDate, (h) => { h.umstaende[id] = !h.umstaende[id]; });
+      renderHealthCard();
+      return;
+    }
+    if (btn.closest('#zyklusZeichenToggles')) {
+      const field = btn.dataset.field;
+      updateHealth(selectedDate, (h) => { h.zyklusZeichen[field] = !h.zyklusZeichen[field]; });
+      renderHealthCard();
+      return;
+    }
+    const group = btn.closest('[data-field]');
+    if (group) {
+      const field = group.dataset.field;
+      const raw = btn.dataset.val;
+      const val = raw === 'true' ? true : (raw === 'false' ? false : Number(raw));
+      updateHealth(selectedDate, (h) => { h[field] = h[field] === val ? null : val; });
+      renderHealthCard();
+      renderCycleRow();
+      renderCharts();
+      computeInsights();
+    }
+  });
+
+  $('#zervixschleim').addEventListener('change', (e) => {
+    updateHealth(selectedDate, (h) => { h.zyklusZeichen.zervixschleim = e.target.value || null; });
+  });
+  $('#hitzewallungenAnzahl').addEventListener('input', (e) => {
+    const val = e.target.value === '' ? null : Number(e.target.value);
+    updateHealth(selectedDate, (h) => { h.hitzewallungenAnzahl = val; });
+  });
+  $('#healthNotiz').addEventListener('input', (e) => {
+    updateHealth(selectedDate, (h) => { h.notiz = e.target.value; });
   });
 
   $('#themeToggle').addEventListener('click', () => {

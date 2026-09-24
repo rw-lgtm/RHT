@@ -179,6 +179,40 @@ body {
 .quick-water-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 .quick-water-row .btn { padding: 6px 12px; font-size: 0.85rem; }
 
+/* ---------- Health / cycle module ---------- */
+#healthCard h3 { font-size: 0.85rem; color: var(--text-secondary); margin: 16px 0 8px; }
+.health-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.health-row-label { font-size: 0.85rem; color: var(--text-secondary); min-width: 130px; }
+.health-row select, .health-row input[type="number"] {
+  padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--page-plane); color: var(--text-primary); font: inherit;
+}
+.health-row input[type="number"] { width: 90px; }
+
+.chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip-group button {
+  font: inherit; font-size: 0.8rem; padding: 6px 11px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--page-plane); color: var(--text-secondary); cursor: pointer;
+}
+.chip-group button:hover { border-color: var(--series-1); }
+.chip-group button.active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+#umstaendeGroup { margin-bottom: 14px; }
+
+.health-symptom-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px 18px; margin: 6px 0 16px; padding: 12px; background: var(--page-plane); border-radius: var(--radius);
+}
+.symptom-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.symptom-label { font-size: 0.8rem; color: var(--text-secondary); }
+.chip-group-sm button { padding: 4px 9px; font-size: 0.75rem; }
+.symptom-row .chip-group { gap: 4px; }
+
+.health-note-label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px; }
+.health-note-label textarea {
+  padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--page-plane); color: var(--text-primary); font: inherit; resize: vertical;
+}
+
 .cycle-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 .btn.period-on { background: color-mix(in srgb, var(--diverging-warm) 20%, transparent); border-color: var(--diverging-warm); color: var(--diverging-warm); }
 
