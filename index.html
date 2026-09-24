@@ -122,7 +122,10 @@
 
     <!-- HEALTH / CYCLE -->
     <section class="card" id="healthCard">
-      <h2>Gesundheit</h2>
+      <div class="card-header-row">
+        <h2>Gesundheit</h2>
+        <button type="button" id="doctorReportBtn" class="btn btn-ghost">🩺 Arztbericht</button>
+      </div>
       <p class="hint">Für den Termin bei deiner Gynäkologin &mdash; unter einer Minute pro Tag. Nachtragen jederzeit über die Datumsauswahl oben.</p>
 
       <div class="health-row">
@@ -347,6 +350,45 @@
           <button type="submit" class="btn btn-primary">Rezept speichern</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- DOCTOR REPORT MODAL -->
+  <div class="modal-backdrop" id="reportModal" hidden>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle" id="reportModalInner">
+      <div class="no-print">
+        <h2 id="reportModalTitle">Arztbericht</h2>
+
+        <div class="range-toggle" id="reportRangeToggle">
+          <button data-range="30" class="btn btn-ghost active" type="button">30 Tage</button>
+          <button data-range="60" class="btn btn-ghost" type="button">60 Tage</button>
+          <button data-range="90" class="btn btn-ghost" type="button">90 Tage</button>
+        </div>
+
+        <details id="baselineDetails">
+          <summary>Baseline vor der Hormonspirale (einmalig einstellen)</summary>
+          <div class="health-symptom-grid" id="baselineGrid"></div>
+          <label class="health-note-label">Zyklus vor der Spirale (Freitext)
+            <textarea id="baselineZyklusFreitext" rows="2" placeholder="z. B. regelmäßig alle 28 Tage, 5 Tage stark …"></textarea>
+          </label>
+        </details>
+
+        <details id="questionsDetails">
+          <summary>Fragen an die Ärztin</summary>
+          <form id="questionForm" class="inline-form">
+            <input type="text" id="questionText" placeholder="Frage eingeben …" required>
+            <button type="submit" class="btn btn-primary">+ Hinzufügen</button>
+          </form>
+          <ul class="log-list" id="questionList"></ul>
+        </details>
+
+        <div class="modal-actions">
+          <button type="button" id="reportModalClose" class="btn btn-ghost">Schließen</button>
+          <button type="button" id="reportPrintBtn" class="btn btn-primary">Drucken / als PDF speichern</button>
+        </div>
+      </div>
+
+      <div id="reportOutput"></div>
     </div>
   </div>
 
