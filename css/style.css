@@ -213,6 +213,24 @@ body {
   background: var(--page-plane); color: var(--text-primary); font: inherit; resize: vertical;
 }
 
+.health-grid-wrap { overflow-x: auto; margin-top: 14px; }
+.health-grid-table { border-collapse: collapse; }
+.health-grid-table th, .health-grid-table td { padding: 0; }
+.health-row-th {
+  position: sticky; left: 0; background: var(--surface-1); z-index: 1;
+  text-align: left; padding: 1px 10px 1px 0 !important; font-size: 0.68rem;
+  color: var(--text-secondary); white-space: nowrap; font-weight: 400;
+}
+.health-date-col {
+  font-size: 0.6rem; color: var(--text-muted); font-weight: 400; text-align: center;
+  padding: 2px 1px !important; white-space: nowrap;
+}
+.health-cell { width: 15px; height: 15px; border: 1px solid var(--surface-1); }
+.health-event-cell {
+  color: var(--diverging-warm); text-align: center; font-size: 9px; line-height: 15px;
+  background: var(--page-plane) !important; border-color: var(--page-plane);
+}
+
 .cycle-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 .btn.period-on { background: color-mix(in srgb, var(--diverging-warm) 20%, transparent); border-color: var(--diverging-warm); color: var(--diverging-warm); }
 

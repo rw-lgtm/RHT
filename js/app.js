@@ -137,11 +137,18 @@ const UMSTAENDE = [
 const BLUTUNG_LABELS = { 0: 'Keine', 1: 'Schmier', 2: 'Leicht', 3: 'Mittel', 4: 'Stark' };
 const SCHLAF_LABELS = { 0: 'schlecht', 1: 'mäßig', 2: 'gut', 3: 'sehr gut' };
 
+const EVENT_TYPES = [
+  { id: 'spirale', label: 'Hormonspirale eingesetzt' },
+  { id: 'duloxetin_start', label: 'Duloxetin begonnen' },
+  { id: 'dosis_geaendert', label: 'Dosis geändert' },
+  { id: 'sonstiges', label: 'Sonstiges' },
+];
+
 /* =========================================================================
    Storage
    ========================================================================= */
 
-const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1', customFoods: 'nutrifit_customfoods_v1', recipes: 'nutrifit_recipes_v1' };
+const STORAGE_KEYS = { profile: 'nutrifit_profile_v1', days: 'nutrifit_days_v1', theme: 'nutrifit_theme_v1', focus: 'nutrifit_focus_v1', customFoods: 'nutrifit_customfoods_v1', recipes: 'nutrifit_recipes_v1', healthEvents: 'nutrifit_healthevents_v1' };
 
 function defaultProfile() {
   return {
@@ -196,6 +203,17 @@ function upsertRecipe(recipe) {
 function deleteRecipeById(id) { saveRecipes(loadRecipes().filter((r) => r.id !== id)); }
 
 function getFoodDB() { return loadCustomFoods().concat(loadRecipes()).concat(FOOD_DB); }
+
+function loadHealthEvents() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.healthEvents)) || []; } catch (e) { return []; }
+}
+function saveHealthEvents(list) { localStorage.setItem(STORAGE_KEYS.healthEvents, JSON.stringify(list)); }
+function addHealthEvent(ev) {
+  const list = loadHealthEvents();
+  list.push(Object.assign({ id: uid() }, ev));
+  saveHealthEvents(list);
+}
+function removeHealthEvent(id) { saveHealthEvents(loadHealthEvents().filter((e) => e.id !== id)); }
 
 /* =========================================================================
    State
@@ -528,6 +546,96 @@ function renderHealthCard() {
   $('#healthCyclePhaseText').textContent = info && info.phase
     ? `Geschätzte Phase: ${info.phase}${info.dayOfCycle ? ` (Zyklustag ${info.dayOfCycle})` : ''}`
     : '';
+}
+
+function healthCellHtml(colorVar, level, maxLevel, titleText) {
+  const style = level == null
+    ? 'background:var(--gridline)'
+    : `background:color-mix(in srgb, ${colorVar} ${Math.round(15 + (level / maxLevel) * 75)}%, var(--page-plane))`;
+  return `<td class="health-cell" style="${style}" title="${escapeHtml(titleText)}"></td>`;
+}
+
+function renderHealthEventList() {
+  const events = loadHealthEvents().slice().sort((a, b) => b.date.localeCompare(a.date));
+  const list = $('#healthEventList');
+  if (!events.length) { list.innerHTML = `<li class="log-empty">Noch keine Ereignisse erfasst.</li>`; return; }
+  list.innerHTML = events.map((ev) => {
+    const typeLabel = (EVENT_TYPES.find((t) => t.id === ev.type) || {}).label || ev.type;
+    return `<li>
+      <div class="log-item-main">
+        <div class="log-item-name">${escapeHtml(typeLabel)}</div>
+        <div class="log-item-detail">${longLabel(ev.date)}${ev.notiz ? ' · ' + escapeHtml(ev.notiz) : ''}</div>
+      </div>
+      <button class="log-item-remove" data-remove-event="${ev.id}" aria-label="Eintrag löschen" title="Löschen">✕</button>
+    </li>`;
+  }).join('');
+}
+
+function renderHealthGrid() {
+  const labels = buildRangeLabels(42, selectedDate);
+  const eventsByDate = {};
+  loadHealthEvents().forEach((ev) => { (eventsByDate[ev.date] = eventsByDate[ev.date] || []).push(ev); });
+
+  const headerCells = labels.map((k) => {
+    const d = keyToDate(k);
+    const atMonthStart = d.getDate() === 1 || k === labels[0];
+    return `<th class="health-date-col">${pad2(d.getDate())}${atMonthStart ? '.' + pad2(d.getMonth() + 1) + '.' : ''}</th>`;
+  }).join('');
+
+  const eventRow = labels.map((k) => {
+    const evs = eventsByDate[k];
+    if (!evs) return `<td class="health-cell"></td>`;
+    const title = evs.map((ev) => `${(EVENT_TYPES.find((t) => t.id === ev.type) || {}).label || ev.type}${ev.notiz ? ': ' + ev.notiz : ''}`).join('; ');
+    return `<td class="health-cell health-event-cell" title="${escapeHtml(title)}">●</td>`;
+  }).join('');
+
+  const blutungRow = labels.map((k) => {
+    const h = days[k] && days[k].health;
+    const val = h ? h.blutung : null;
+    const title = val == null ? `${longLabel(k)}: keine Angabe` : `${longLabel(k)}: ${BLUTUNG_LABELS[val]}`;
+    return healthCellHtml('var(--diverging-warm)', val, 4, title);
+  }).join('');
+
+  const symptomRows = SYMPTOMS.map((s) => {
+    const cells = labels.map((k) => {
+      const h = days[k] && days[k].health;
+      const val = h ? h.symptome[s.id] : null;
+      const title = `${longLabel(k)} · ${s.full}: ${val == null ? 'keine Angabe' : val}`;
+      return healthCellHtml('var(--series-1)', val, 3, title);
+    }).join('');
+    return `<tr><th class="health-row-th" title="${escapeHtml(s.full)}">${escapeHtml(s.short)}</th>${cells}</tr>`;
+  }).join('');
+
+  const schlafRow = labels.map((k) => {
+    const h = days[k] && days[k].health;
+    const val = h ? h.schlaf : null;
+    const invVal = val == null ? null : (3 - val);
+    const title = `${longLabel(k)} · Schlaf: ${val == null ? 'keine Angabe' : SCHLAF_LABELS[val]}`;
+    return healthCellHtml('var(--series-3)', invVal, 3, title);
+  }).join('');
+
+  const hasActivity = labels.some((k) => days[k] && days[k].activities && days[k].activities.length);
+  let fitnessRowHtml = '';
+  if (hasActivity) {
+    const minutesByDay = labels.map((k) => (days[k] && days[k].activities ? days[k].activities.reduce((s, a) => s + (a.minutes || 0), 0) : 0));
+    const maxMinutes = Math.max(1, ...minutesByDay);
+    const cells = labels.map((k, i) => {
+      const minutes = minutesByDay[i];
+      const val = minutes > 0 ? Math.min(3, Math.ceil((minutes / maxMinutes) * 3)) : null;
+      return healthCellHtml('var(--series-4)', val, 3, `${longLabel(k)} · Bewegung: ${minutes} Min.`);
+    }).join('');
+    fitnessRowHtml = `<tr><th class="health-row-th">Bewegung</th>${cells}</tr>`;
+  }
+
+  $('#healthGridTable').innerHTML = `
+    <thead><tr><th class="health-row-th"></th>${headerCells}</tr></thead>
+    <tbody>
+      <tr><th class="health-row-th">Ereignis</th>${eventRow}</tr>
+      <tr><th class="health-row-th">Blutung</th>${blutungRow}</tr>
+      ${symptomRows}
+      <tr><th class="health-row-th">Schlaf</th>${schlafRow}</tr>
+      ${fitnessRowHtml}
+    </tbody>`;
 }
 
 /* =========================================================================
@@ -1120,6 +1228,8 @@ function renderAll() {
   renderMacroBars();
   renderWaterCard();
   renderHealthCard();
+  renderHealthEventList();
+  renderHealthGrid();
   renderFoodList();
   renderActivityList();
   const dayObj = getDay(selectedDate);
@@ -1576,6 +1686,23 @@ function wireEvents() {
     updateHealth(selectedDate, (h) => { h.notiz = e.target.value; });
   });
 
+  $('#healthEventForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const date = $('#eventDate').value;
+    if (!date) return;
+    addHealthEvent({ date, type: $('#eventType').value, notiz: $('#eventNotiz').value.trim() });
+    $('#eventNotiz').value = '';
+    renderHealthEventList();
+    renderHealthGrid();
+  });
+  $('#healthEventList').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-remove-event]');
+    if (!btn) return;
+    removeHealthEvent(btn.dataset.removeEvent);
+    renderHealthEventList();
+    renderHealthGrid();
+  });
+
   $('#themeToggle').addEventListener('click', () => {
     const cur = document.documentElement.getAttribute('data-theme');
     const next = cur === 'dark' ? 'light' : 'dark';
@@ -1636,7 +1763,7 @@ function wireEvents() {
   });
 
   $('#exportBtn').addEventListener('click', () => {
-    const data = { profile, days, customFoods: loadCustomFoods(), focusTips: loadFocusTips(), recipes: loadRecipes() };
+    const data = { profile, days, customFoods: loadCustomFoods(), focusTips: loadFocusTips(), recipes: loadRecipes(), healthEvents: loadHealthEvents() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1656,6 +1783,7 @@ function wireEvents() {
         if (data.customFoods) saveCustomFoods(data.customFoods);
         if (data.focusTips) saveFocusTips(data.focusTips);
         if (data.recipes) saveRecipes(data.recipes);
+        if (data.healthEvents) saveHealthEvents(data.healthEvents);
         setupStaticLists();
         renderAll();
         alert('Daten erfolgreich importiert.');
@@ -1695,6 +1823,7 @@ function init() {
 
   setupStaticLists();
   wireEvents();
+  $('#eventDate').value = todayKey();
   renderAll();
 
   if (firstRun) openSettings();
