@@ -186,6 +186,29 @@
       </label>
     </section>
 
+    <!-- HEALTH: 6-WEEK GRID + EVENTS -->
+    <section class="card">
+      <h2>Verlauf 6 Wochen</h2>
+      <p class="hint">Zum Scrollen horizontal wischen &mdash; heller = wenig/keine Angabe, dunkler = ausgeprägter.</p>
+
+      <form id="healthEventForm" class="inline-form">
+        <input type="date" id="eventDate" required>
+        <select id="eventType">
+          <option value="spirale">Hormonspirale eingesetzt</option>
+          <option value="duloxetin_start">Duloxetin begonnen</option>
+          <option value="dosis_geaendert">Dosis geändert</option>
+          <option value="sonstiges">Sonstiges</option>
+        </select>
+        <input type="text" id="eventNotiz" placeholder="Notiz (optional)">
+        <button type="submit" class="btn btn-primary">+ Ereignis</button>
+      </form>
+      <ul class="log-list" id="healthEventList"></ul>
+
+      <div class="health-grid-wrap">
+        <table class="health-grid-table" id="healthGridTable"></table>
+      </div>
+    </section>
+
     <!-- TRENDS -->
     <section class="card">
       <div class="card-header-row">
