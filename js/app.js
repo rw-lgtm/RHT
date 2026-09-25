@@ -88,6 +88,7 @@ const FOOD_DB = [
 const ACTIVITY_MET = {
   'Gehen (locker)': 3.0,
   'Gehen (zügig)': 4.3,
+  'Incline Walking': 6.0,
   'Hund ausführen': 3.5,
   'Wandern': 6.0,
   'Joggen / Laufen': 8.0,
