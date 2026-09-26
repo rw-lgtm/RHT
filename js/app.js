@@ -88,6 +88,11 @@ const FOOD_DB = [
   { name: 'Schnitzel (Schweinsfledermaus) mit Petersilerdäpfel, kleine Portion', kcal: 149, protein: 8.0, carbs: 12.9, fat: 6.9, fiber: 0.9, gramsPerPiece: 350 },
   { name: 'Schweinebraten vom Bauch mit Sauerkraut & Semmelknödel', kcal: 211, protein: 7.6, carbs: 9.2, fat: 14.9, fiber: 1.4, gramsPerPiece: 370 },
   { name: 'Rindsuppe mit Frittaten', kcal: 33, protein: 1.8, carbs: 2.7, fat: 1.5, fiber: 0, gramsPerPiece: 330 },
+
+  { name: 'Bergkäse', kcal: 380, protein: 27, carbs: 0, fat: 30, fiber: 0 },
+  { name: 'Kohl (Weißkohl, roh)', kcal: 25, protein: 1.3, carbs: 4.2, fat: 0.2, fiber: 2.5 },
+  { name: 'Speck (geräuchert)', kcal: 665, protein: 9, carbs: 0, fat: 68, fiber: 0 },
+  { name: 'Flat White (Hafermilch)', kcal: 49, protein: 0.9, carbs: 5.7, fat: 2.4, fiber: 0.6, gramsPerPiece: 150 },
 ];
 
 const ACTIVITY_MET = {
