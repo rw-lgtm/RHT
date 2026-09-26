@@ -93,6 +93,7 @@ const FOOD_DB = [
   { name: 'Kohl (Weißkohl, roh)', kcal: 25, protein: 1.3, carbs: 4.2, fat: 0.2, fiber: 2.5 },
   { name: 'Speck (geräuchert)', kcal: 665, protein: 9, carbs: 0, fat: 68, fiber: 0 },
   { name: 'Flat White (Hafermilch)', kcal: 49, protein: 0.9, carbs: 5.7, fat: 2.4, fiber: 0.6, gramsPerPiece: 150 },
+  { name: 'Proteinpulver', kcal: 355, protein: 82, carbs: 3.2, fat: 1, fiber: 0 },
 ];
 
 const ACTIVITY_MET = {
