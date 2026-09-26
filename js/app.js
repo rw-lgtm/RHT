@@ -83,6 +83,11 @@ const FOOD_DB = [
   { name: 'Heidelbeere', kcal: 57, protein: 0.7, carbs: 14.5, fat: 0.3, fiber: 2.4 },
   { name: 'Champagner', kcal: 80, protein: 0.1, carbs: 1.5, fat: 0, fiber: 0 },
   { name: 'NÖM Skyr Protein-Joghurt Vanille', kcal: 51, protein: 9.0, carbs: 3.4, fat: 0.1, fiber: 0 },
+
+  // Fertiggerichte: Schätzwerte für eine ganze Portion, hinterlegt als "1 Stück" = beschriebene Portion
+  { name: 'Schnitzel (Schweinsfledermaus) mit Petersilerdäpfel, kleine Portion', kcal: 149, protein: 8.0, carbs: 12.9, fat: 6.9, fiber: 0.9, gramsPerPiece: 350 },
+  { name: 'Schweinebraten vom Bauch mit Sauerkraut & Semmelknödel', kcal: 211, protein: 7.6, carbs: 9.2, fat: 14.9, fiber: 1.4, gramsPerPiece: 370 },
+  { name: 'Rindsuppe mit Frittaten', kcal: 33, protein: 1.8, carbs: 2.7, fat: 1.5, fiber: 0, gramsPerPiece: 330 },
 ];
 
 const ACTIVITY_MET = {
