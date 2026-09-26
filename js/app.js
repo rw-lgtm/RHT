@@ -9,16 +9,16 @@ const FOOD_DB = [
   { name: 'Rinderhack (gemischt)', kcal: 254, protein: 17, carbs: 0, fat: 20, fiber: 0 },
   { name: 'Lachs (roh)', kcal: 208, protein: 20, carbs: 0, fat: 13, fiber: 0 },
   { name: 'Ei (ganz)', kcal: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0, gramsPerPiece: 53 },
-  { name: 'Magerquark', kcal: 67, protein: 12, carbs: 4, fat: 0.2, fiber: 0 },
-  { name: 'Naturjoghurt 3,5%', kcal: 66, protein: 3.5, carbs: 4.7, fat: 3.5, fiber: 0 },
-  { name: 'Griechischer Joghurt 10%', kcal: 133, protein: 5.7, carbs: 4, fat: 10, fiber: 0 },
+  { name: 'Magerquark', kcal: 67, protein: 12, carbs: 4, fat: 0.2, fiber: 0, gramsPerTbsp: 20, gramsPerTsp: 7 },
+  { name: 'Naturjoghurt 3,5%', kcal: 66, protein: 3.5, carbs: 4.7, fat: 3.5, fiber: 0, gramsPerTbsp: 15, gramsPerTsp: 5 },
+  { name: 'Griechischer Joghurt 10%', kcal: 133, protein: 5.7, carbs: 4, fat: 10, fiber: 0, gramsPerTbsp: 15, gramsPerTsp: 5 },
   { name: 'Milch 3,5%', kcal: 64, protein: 3.4, carbs: 4.8, fat: 3.6, fiber: 0 },
   { name: 'Vollkornreis (gekocht)', kcal: 123, protein: 2.6, carbs: 25, fat: 1, fiber: 1.8 },
   { name: 'Weißer Reis (gekocht)', kcal: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4 },
   { name: 'Vollkornnudeln (gekocht)', kcal: 124, protein: 5, carbs: 25, fat: 1, fiber: 4 },
   { name: 'Kartoffeln (gekocht)', kcal: 87, protein: 2, carbs: 20, fat: 0.1, fiber: 1.8, gramsPerPiece: 150 },
   { name: 'Süßkartoffel (gekocht)', kcal: 90, protein: 2, carbs: 21, fat: 0.1, fiber: 3, gramsPerPiece: 200 },
-  { name: 'Haferflocken (roh)', kcal: 372, protein: 13, carbs: 60, fat: 7, fiber: 10 },
+  { name: 'Haferflocken (roh)', kcal: 372, protein: 13, carbs: 60, fat: 7, fiber: 10, gramsPerTbsp: 8, gramsPerTsp: 2.7 },
   { name: 'Vollkornbrot', kcal: 216, protein: 8, carbs: 40, fat: 3, fiber: 7 },
   { name: 'Weißbrot', kcal: 265, protein: 9, carbs: 49, fat: 3.2, fiber: 2.7 },
   { name: 'Banane', kcal: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, gramsPerPiece: 120 },
@@ -28,10 +28,10 @@ const FOOD_DB = [
   { name: 'Gemüse gemischt / Salat', kcal: 25, protein: 2, carbs: 4, fat: 0.3, fiber: 2 },
   { name: 'Tomate', kcal: 18, protein: 0.9, carbs: 3.9, fat: 0.2, fiber: 1.2, gramsPerPiece: 120 },
   { name: 'Avocado', kcal: 160, protein: 2, carbs: 9, fat: 15, fiber: 7, gramsPerPiece: 200 },
-  { name: 'Olivenöl', kcal: 884, protein: 0, carbs: 0, fat: 100, fiber: 0 },
+  { name: 'Olivenöl', kcal: 884, protein: 0, carbs: 0, fat: 100, fiber: 0, gramsPerTbsp: 14, gramsPerTsp: 4.6 },
   { name: 'Butter', kcal: 717, protein: 0.9, carbs: 0.1, fat: 81, fiber: 0 },
   { name: 'Mandeln', kcal: 579, protein: 21, carbs: 22, fat: 50, fiber: 12.5 },
-  { name: 'Erdnussbutter', kcal: 588, protein: 25, carbs: 20, fat: 50, fiber: 6 },
+  { name: 'Erdnussbutter', kcal: 588, protein: 25, carbs: 20, fat: 50, fiber: 6, gramsPerTbsp: 16, gramsPerTsp: 5 },
   { name: 'Linsen (gekocht)', kcal: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9 },
   { name: 'Kichererbsen (gekocht)', kcal: 164, protein: 8.9, carbs: 27, fat: 2.6, fiber: 7.6 },
   { name: 'Tofu', kcal: 76, protein: 8, carbs: 1.9, fat: 4.8, fiber: 0.3 },
@@ -61,7 +61,9 @@ const FOOD_DB = [
   { name: 'Kürbis (Hokkaido, roh)', kcal: 31, protein: 1.0, carbs: 5.5, fat: 0.2, fiber: 1.5 },
   { name: 'Couscous (gekocht)', kcal: 112, protein: 3.8, carbs: 23, fat: 0.2, fiber: 1.4 },
   { name: 'Bulgur (gekocht)', kcal: 83, protein: 3.1, carbs: 18.6, fat: 0.2, fiber: 4.5 },
-  { name: 'Leinöl', kcal: 884, protein: 0, carbs: 0, fat: 100, fiber: 0 },
+  { name: 'Leinöl', kcal: 884, protein: 0, carbs: 0, fat: 100, fiber: 0, gramsPerTbsp: 14, gramsPerTsp: 4.6 },
+  { name: 'Leinsamen (ganz)', kcal: 534, protein: 18, carbs: 29, fat: 42, fiber: 27, gramsPerTbsp: 10, gramsPerTsp: 3.3 },
+  { name: 'Chiasamen', kcal: 486, protein: 17, carbs: 42, fat: 31, fiber: 34, gramsPerTbsp: 12, gramsPerTsp: 4 },
   { name: 'Zwetschgen', kcal: 46, protein: 0.7, carbs: 9.6, fat: 0.3, fiber: 1.9, gramsPerPiece: 15 },
   { name: 'Topfen 20%', kcal: 98, protein: 12, carbs: 4, fat: 4.1, fiber: 0 },
   { name: 'Weißwein (trocken)', kcal: 82, protein: 0.1, carbs: 2.5, fat: 0, fiber: 0 },
@@ -115,7 +117,16 @@ const ACTIVITY_MET = {
 };
 
 const KCAL_PER_KG_FAT = 7700;
-const UNIT_LABELS = { g: 'g', ml: 'ml', stk: 'Stück' };
+const UNIT_LABELS = { g: 'g', ml: 'ml', stk: 'Stück', el: 'EL', tl: 'TL' };
+const PIECE_UNIT_FIELDS = { stk: 'gramsPerPiece', el: 'gramsPerTbsp', tl: 'gramsPerTsp' };
+const PIECE_UNIT_ERROR_LABELS = { stk: 'Stückgewicht', el: 'EL-Umrechnung', tl: 'TL-Umrechnung' };
+
+function resolveGrams(food, amount, unit) {
+  if (unit === 'g' || unit === 'ml') return { grams: amount };
+  const field = PIECE_UNIT_FIELDS[unit];
+  if (!food[field]) return { error: `Für "${food.name}" ist keine ${PIECE_UNIT_ERROR_LABELS[unit]} hinterlegt – bitte g oder ml wählen.` };
+  return { grams: amount * food[field] };
+}
 
 /* =========================================================================
    Health/cycle tracking: symptoms (angelehnt an die Menopause Rating Scale)
@@ -878,7 +889,7 @@ function renderFoodList() {
   list.innerHTML = dayObj.food.map((f) => `
     <li>
       <div class="log-item-main">
-        <div class="log-item-name">${escapeHtml(f.name)} ${f.amount != null ? `(${fmt(f.amount, f.unit === 'stk' ? 1 : 0)} ${UNIT_LABELS[f.unit] || 'g'})` : ''}</div>
+        <div class="log-item-name">${escapeHtml(f.name)} ${f.amount != null ? `(${fmt(f.amount, ['stk', 'el', 'tl'].includes(f.unit) ? 1 : 0)} ${UNIT_LABELS[f.unit] || 'g'})` : ''}</div>
         <div class="log-item-detail">${fmt(f.kcal)} kcal · E ${fmt(f.protein, 1)} g · K ${fmt(f.carbs, 1)} g · F ${fmt(f.fat, 1)} g · Ba ${fmt(f.fiber, 1)} g</div>
       </div>
       <button class="log-item-remove" data-remove-food="${f.id}" aria-label="Eintrag löschen" title="Löschen">✕</button>
@@ -1563,11 +1574,9 @@ let recipeEditId = null;
 function resolveIngredientGrams(name, amount, unit) {
   const food = getFoodDB().find((f) => f.name.toLowerCase() === name.toLowerCase());
   if (!food) return { error: `Unbekannte Zutat: "${name}". Bitte einen Namen aus der Liste wählen oder zuerst als Lebensmittel anlegen.` };
-  if (unit === 'stk') {
-    if (!food.gramsPerPiece) return { error: `Für "${food.name}" ist kein Stückgewicht hinterlegt – bitte g oder ml wählen.` };
-    return { food, grams: amount * food.gramsPerPiece };
-  }
-  return { food, grams: amount };
+  const resolved = resolveGrams(food, amount, unit);
+  if (resolved.error) return { error: resolved.error };
+  return { food, grams: resolved.grams };
 }
 
 function readIngredientRows() {
@@ -1619,6 +1628,8 @@ function addIngredientRow(prefill) {
       <option value="g">g</option>
       <option value="ml">ml</option>
       <option value="stk">Stück</option>
+      <option value="el">EL</option>
+      <option value="tl">TL</option>
     </select>
     <button type="button" class="ingredient-remove log-item-remove" aria-label="Zutat entfernen" title="Entfernen">✕</button>
   `;
@@ -1729,17 +1740,12 @@ function wireEvents() {
         fiber: Number($('#foodFiberManual').value) || 0,
       };
     } else if (known) {
-      let grams;
-      if (unit === 'stk') {
-        if (!known.gramsPerPiece) { alert(`Für "${known.name}" ist kein Stückgewicht hinterlegt – bitte g oder ml wählen.`); return; }
-        grams = amount * known.gramsPerPiece;
-      } else {
-        grams = amount;
-      }
-      const factor = grams / 100;
+      const resolved = resolveGrams(known, amount, unit);
+      if (resolved.error) { alert(resolved.error); return; }
+      const factor = resolved.grams / 100;
       entry = { name, amount, unit, kcal: known.kcal * factor, protein: known.protein * factor, carbs: known.carbs * factor, fat: known.fat * factor, fiber: known.fiber * factor };
     } else if (pendingOcrFood) {
-      if (unit === 'stk') { alert('Gescannte Nährwerte gelten pro 100 g/ml – bitte g oder ml wählen.'); return; }
+      if (unit !== 'g' && unit !== 'ml') { alert('Gescannte Nährwerte gelten pro 100 g/ml – bitte g oder ml wählen.'); return; }
       const factor = amount / 100;
       const p = pendingOcrFood;
       entry = { name, amount, unit, kcal: p.kcal * factor, protein: p.protein * factor, carbs: p.carbs * factor, fat: p.fat * factor, fiber: p.fiber * factor };
