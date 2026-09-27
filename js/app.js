@@ -96,6 +96,9 @@ const FOOD_DB = [
   { name: 'Speck (geräuchert)', kcal: 665, protein: 9, carbs: 0, fat: 68, fiber: 0 },
   { name: 'Flat White (Hafermilch)', kcal: 49, protein: 0.9, carbs: 5.7, fat: 2.4, fiber: 0.6, gramsPerPiece: 150 },
   { name: 'Proteinpulver', kcal: 355, protein: 82, carbs: 3.2, fat: 1, fiber: 0 },
+  { name: 'Thunfisch (in Wasser, abgetropft)', kcal: 116, protein: 26, carbs: 0, fat: 1, fiber: 0 },
+  { name: 'Kapern (abgetropft)', kcal: 23, protein: 2.4, carbs: 1.5, fat: 0.9, fiber: 3.2, gramsPerTbsp: 9, gramsPerTsp: 3 },
+  { name: 'Oliven', kcal: 145, protein: 1, carbs: 3.8, fat: 14, fiber: 3.2, gramsPerPiece: 4 },
 ];
 
 const ACTIVITY_MET = {
