@@ -56,7 +56,7 @@ const FOOD_DB = [
   { name: 'Hühnchen (gegart)', kcal: 190, protein: 24, carbs: 0, fat: 10, fiber: 0 },
   { name: 'Ayran', kcal: 37, protein: 1.6, carbs: 2.5, fat: 1.8, fiber: 0 },
   { name: 'Cashewkerne', kcal: 553, protein: 18, carbs: 30, fat: 44, fiber: 3.3 },
-  { name: 'Schafjoghurt', kcal: 108, protein: 4.5, carbs: 4.5, fat: 7.0, fiber: 0 },
+  { name: 'Schafjoghurt', kcal: 108, protein: 4.5, carbs: 4.5, fat: 7.0, fiber: 0, gramsPerTbsp: 15, gramsPerTsp: 5 },
   { name: 'Kaffee (schwarz)', kcal: 1, protein: 0.1, carbs: 0, fat: 0, fiber: 0 },
   { name: 'Kürbis (Hokkaido, roh)', kcal: 31, protein: 1.0, carbs: 5.5, fat: 0.2, fiber: 1.5 },
   { name: 'Couscous (gekocht)', kcal: 112, protein: 3.8, carbs: 23, fat: 0.2, fiber: 1.4 },
@@ -84,7 +84,7 @@ const FOOD_DB = [
   { name: 'Himbeere', kcal: 52, protein: 1.2, carbs: 11.9, fat: 0.65, fiber: 6.5 },
   { name: 'Heidelbeere', kcal: 57, protein: 0.7, carbs: 14.5, fat: 0.3, fiber: 2.4 },
   { name: 'Champagner', kcal: 80, protein: 0.1, carbs: 1.5, fat: 0, fiber: 0 },
-  { name: 'NÖM Skyr Protein-Joghurt Vanille', kcal: 51, protein: 9.0, carbs: 3.4, fat: 0.1, fiber: 0 },
+  { name: 'NÖM Skyr Protein-Joghurt Vanille', kcal: 51, protein: 9.0, carbs: 3.4, fat: 0.1, fiber: 0, gramsPerTbsp: 15, gramsPerTsp: 5 },
 
   // Fertiggerichte: Schätzwerte für eine ganze Portion, hinterlegt als "1 Stück" = beschriebene Portion
   { name: 'Schnitzel (Schweinsfledermaus) mit Petersilerdäpfel, kleine Portion', kcal: 149, protein: 8.0, carbs: 12.9, fat: 6.9, fiber: 0.9, gramsPerPiece: 350 },
