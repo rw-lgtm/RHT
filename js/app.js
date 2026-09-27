@@ -99,6 +99,8 @@ const FOOD_DB = [
   { name: 'Thunfisch (in Wasser, abgetropft)', kcal: 116, protein: 26, carbs: 0, fat: 1, fiber: 0 },
   { name: 'Kapern (abgetropft)', kcal: 23, protein: 2.4, carbs: 1.5, fat: 0.9, fiber: 3.2, gramsPerTbsp: 9, gramsPerTsp: 3 },
   { name: 'Oliven', kcal: 145, protein: 1, carbs: 3.8, fat: 14, fiber: 3.2, gramsPerPiece: 4 },
+  { name: 'Pinienkerne', kcal: 673, protein: 14, carbs: 13, fat: 61, fiber: 3.7, gramsPerTbsp: 10, gramsPerTsp: 3.3 },
+  { name: 'Zwiebel (roh)', kcal: 40, protein: 1.1, carbs: 8, fat: 0.1, fiber: 1.7, gramsPerPiece: 100 },
 ];
 
 const ACTIVITY_MET = {
