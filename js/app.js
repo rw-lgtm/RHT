@@ -101,6 +101,11 @@ const FOOD_DB = [
   { name: 'Oliven', kcal: 145, protein: 1, carbs: 3.8, fat: 14, fiber: 3.2, gramsPerPiece: 4 },
   { name: 'Pinienkerne', kcal: 673, protein: 14, carbs: 13, fat: 61, fiber: 3.7, gramsPerTbsp: 10, gramsPerTsp: 3.3 },
   { name: 'Zwiebel (roh)', kcal: 40, protein: 1.1, carbs: 8, fat: 0.1, fiber: 1.7, gramsPerPiece: 100 },
+  { name: 'Mais (Zuckermais, abgetropft)', kcal: 86, protein: 3.2, carbs: 19, fat: 1.2, fiber: 2.4 },
+  { name: 'Sonnenblumenkerne', kcal: 584, protein: 21, carbs: 20, fat: 51, fiber: 8.6, gramsPerTbsp: 10, gramsPerTsp: 3.3 },
+  { name: 'Sesam', kcal: 573, protein: 18, carbs: 12, fat: 50, fiber: 12, gramsPerTbsp: 9, gramsPerTsp: 3 },
+  { name: 'Kürbiskerne', kcal: 559, protein: 30, carbs: 11, fat: 49, fiber: 6, gramsPerTbsp: 9, gramsPerTsp: 3 },
+  { name: 'NÖM Pro Kakao', kcal: 62, protein: 10, carbs: 4.7, fat: 0.5, fiber: 0, gramsPerPiece: 350 },
 ];
 
 const ACTIVITY_MET = {
