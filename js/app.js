@@ -106,6 +106,9 @@ const FOOD_DB = [
   { name: 'Sesam', kcal: 573, protein: 18, carbs: 12, fat: 50, fiber: 12, gramsPerTbsp: 9, gramsPerTsp: 3 },
   { name: 'Kürbiskerne', kcal: 559, protein: 30, carbs: 11, fat: 49, fiber: 6, gramsPerTbsp: 9, gramsPerTsp: 3 },
   { name: 'NÖM Pro Kakao', kcal: 62, protein: 10, carbs: 4.7, fat: 0.5, fiber: 0, gramsPerPiece: 350 },
+  { name: 'Rindfleisch (gebraten)', kcal: 250, protein: 27, carbs: 0, fat: 15, fiber: 0 },
+  { name: 'Grünkohl (roh)', kcal: 49, protein: 4.3, carbs: 5.4, fat: 0.9, fiber: 4.3 },
+  { name: 'Chicorée (roh)', kcal: 17, protein: 1.1, carbs: 1.8, fat: 0.2, fiber: 3.1 },
 ];
 
 const ACTIVITY_MET = {
