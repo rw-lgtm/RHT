@@ -109,6 +109,8 @@ const FOOD_DB = [
   { name: 'Rindfleisch (gebraten)', kcal: 250, protein: 27, carbs: 0, fat: 15, fiber: 0 },
   { name: 'Grünkohl (roh)', kcal: 49, protein: 4.3, carbs: 5.4, fat: 0.9, fiber: 4.3 },
   { name: 'Chicorée (roh)', kcal: 17, protein: 1.1, carbs: 1.8, fat: 0.2, fiber: 3.1 },
+  { name: 'Mohnzelt', kcal: 300, protein: 7, carbs: 40, fat: 11, fiber: 3.5, gramsPerPiece: 130 },
+  { name: 'Fisolen (gekocht)', kcal: 35, protein: 1.9, carbs: 4.3, fat: 0.3, fiber: 2.9 },
 ];
 
 const ACTIVITY_MET = {
