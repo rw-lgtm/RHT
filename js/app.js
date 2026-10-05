@@ -111,6 +111,7 @@ const FOOD_DB = [
   { name: 'Chicorée (roh)', kcal: 17, protein: 1.1, carbs: 1.8, fat: 0.2, fiber: 3.1 },
   { name: 'Mohnzelt', kcal: 300, protein: 7, carbs: 40, fat: 11, fiber: 3.5, gramsPerPiece: 130 },
   { name: 'Fisolen (gekocht)', kcal: 35, protein: 1.9, carbs: 4.3, fat: 0.3, fiber: 2.9 },
+  { name: 'NÖM Pro 20 Topfencreme Blueberry Cheesecake', kcal: 52, protein: 8.4, carbs: 4.0, fat: 0.5, fiber: 0, gramsPerPiece: 235 },
 ];
 
 const ACTIVITY_MET = {
