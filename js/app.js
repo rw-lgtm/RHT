@@ -113,6 +113,11 @@ const FOOD_DB = [
   { name: 'Fisolen (gekocht)', kcal: 35, protein: 1.9, carbs: 4.3, fat: 0.3, fiber: 2.9 },
   { name: 'NÖM Pro 20 Topfencreme Blueberry Cheesecake', kcal: 52, protein: 8.4, carbs: 4.0, fat: 0.5, fiber: 0, gramsPerPiece: 235 },
   { name: 'Laugenbrezel', kcal: 270, protein: 8, carbs: 50, fat: 3.5, fiber: 2.2, gramsPerPiece: 90 },
+  { name: 'Mozzarellabällchen', kcal: 280, protein: 22, carbs: 2, fat: 21, fiber: 0 },
+  { name: 'Rotkraut Salat', kcal: 60, protein: 1, carbs: 8, fat: 2.5, fiber: 2.5 },
+  { name: 'Quinoa (gekocht)', kcal: 120, protein: 4.4, carbs: 21, fat: 1.9, fiber: 2.8 },
+  { name: 'Schafskäse', kcal: 265, protein: 14, carbs: 1, fat: 23, fiber: 0 },
+  { name: 'Karfiolcremesuppe', kcal: 55, protein: 1.5, carbs: 5, fat: 3, fiber: 1.5 },
 ];
 
 const ACTIVITY_MET = {
