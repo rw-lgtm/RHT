@@ -119,6 +119,7 @@ const FOOD_DB = [
   { name: 'Schafskäse', kcal: 265, protein: 14, carbs: 1, fat: 23, fiber: 0 },
   { name: 'Karfiolcremesuppe', kcal: 55, protein: 1.5, carbs: 5, fat: 3, fiber: 1.5 },
   { name: 'Geselchtes mit Kartoffelpüree und Tirolerknödel', kcal: 161, protein: 6.4, carbs: 14.8, fat: 7.8, fiber: 1.3, gramsPerPiece: 190 },
+  { name: 'Zwetschgenröster (ohne Zucker)', kcal: 65, protein: 0.8, carbs: 14, fat: 0.3, fiber: 2.2 },
 ];
 
 const ACTIVITY_MET = {
