@@ -118,6 +118,7 @@ const FOOD_DB = [
   { name: 'Quinoa (gekocht)', kcal: 120, protein: 4.4, carbs: 21, fat: 1.9, fiber: 2.8 },
   { name: 'Schafskäse', kcal: 265, protein: 14, carbs: 1, fat: 23, fiber: 0 },
   { name: 'Karfiolcremesuppe', kcal: 55, protein: 1.5, carbs: 5, fat: 3, fiber: 1.5 },
+  { name: 'Geselchtes mit Kartoffelpüree und Tirolerknödel', kcal: 161, protein: 6.4, carbs: 14.8, fat: 7.8, fiber: 1.3, gramsPerPiece: 190 },
 ];
 
 const ACTIVITY_MET = {
