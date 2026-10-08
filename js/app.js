@@ -121,6 +121,7 @@ const FOOD_DB = [
   { name: 'Geselchtes mit Kartoffelpüree', kcal: 142, protein: 6.2, carbs: 11.5, fat: 7.2, fiber: 1.2, gramsPerPiece: 130 },
   { name: 'Tirolerknödel', kcal: 200, protein: 7, carbs: 22, fat: 9, fiber: 1.5, gramsPerPiece: 60 },
   { name: 'Zwetschgenröster (ohne Zucker)', kcal: 65, protein: 0.8, carbs: 14, fat: 0.3, fiber: 2.2 },
+  { name: 'Edamame (gekocht)', kcal: 122, protein: 11, carbs: 10, fat: 5, fiber: 5.2 },
 ];
 
 const ACTIVITY_MET = {
